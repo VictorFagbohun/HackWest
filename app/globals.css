@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+:root {
+  --paper: #f4e8c1;
+  --ink: #2a1f14;
+  --wood: #6b3e1a;
+  --moss: #3d6b3a;
+  --hud: #1a140f;
+}
+
+html,
+body {
+  min-height: 100%;
+  background: #0f1a12;
+  color: var(--paper);
+}
+
+body {
+  font-family: "Pixelify Sans", "Courier New", monospace;
+}
+
+canvas {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
