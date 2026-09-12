@@ -73,8 +73,8 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#0b1410] px-4 py-6">
       <header className="mx-auto mb-5 flex w-full max-w-[1440px] flex-col justify-between gap-3 sm:flex-row sm:items-end">
         <div>
-          <p className="text-xs uppercase tracking-[0.35em] text-amber-200/70">HackWest</p>
-          <h1 className="mt-1 text-3xl text-amber-100">Campus World</h1>
+          <p className="text-xs uppercase tracking-[0.35em] text-amber-200/70">Campus Quest</p>
+          <h1 className="mt-1 text-3xl text-amber-100">Build Your Campus</h1>
           <p className="mt-2 text-sm text-emerald-100/70">Build your campus, complete quests, and explore with friends.</p>
         </div>
         <div className="flex gap-2 text-xs">
