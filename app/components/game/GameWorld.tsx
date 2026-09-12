@@ -12,6 +12,7 @@ export function GameWorld({
   playerName,
   onWorldChange,
   onCoinsChange,
+  onEditableChange,
 }: GameWorldProps) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [localWorld, setLocalWorld] = useState<WorldData>(world);
@@ -84,32 +85,27 @@ export function GameWorld({
   };
 
   return (
-    <section className="w-full max-w-5xl">
-      <div className="relative overflow-hidden rounded-lg border-4 border-[#6b3e1a] bg-[#0d1a12] shadow-[0_12px_0_#2a1b10]">
-        <div className="border-b-2 border-[#8a5a2b] bg-[#3d2918] px-3 py-1 text-[11px] uppercase tracking-[0.25em] text-amber-100/80">
-          {localWorld.name ?? "Campus"}
-        </div>
-        <div className="relative">
-          <WorldHud
-            playerName={playerName}
-            coins={localCoins}
-            editable={editable}
-            buildMode={buildMode}
-            selectedCatalogId={selectedCatalogId}
-            prompt={prompt}
-            onToggleBuild={() => {
-              setBuildMode((value) => !value);
-              setSelectedCatalogId(null);
-            }}
-            onSelectItem={handleSelectItem}
-          />
-          <div
-            ref={hostRef}
-            className="aspect-[3/2] w-full bg-black"
-            data-testid="game-world-host"
-          />
-        </div>
-      </div>
+    <section className="game-stage">
+      <WorldHud
+        worldName={localWorld.name ?? "Campus"}
+        playerName={playerName}
+        coins={localCoins}
+        editable={editable}
+        buildMode={buildMode}
+        selectedCatalogId={selectedCatalogId}
+        prompt={prompt}
+        onToggleBuild={() => {
+          setBuildMode((value) => !value);
+          setSelectedCatalogId(null);
+        }}
+        onSelectItem={handleSelectItem}
+        onEditableChange={onEditableChange}
+      />
+      <div
+        ref={hostRef}
+        className="game-canvas-host"
+        data-testid="game-world-host"
+      />
     </section>
   );
 }

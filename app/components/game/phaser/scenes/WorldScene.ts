@@ -78,6 +78,9 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.startFollow(this.player.sprite, true, 0.12, 0.12);
     this.cameras.main.setRoundPixels(true);
+    this.applyCameraZoom();
+    this.scale.on("resize", this.applyCameraZoom, this);
+    this.cameras.main.fadeIn(350, 10, 18, 12);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.player.sprite.setCollideWorldBounds(true);
 
@@ -93,9 +96,21 @@ export class WorldScene extends Phaser.Scene {
 
     this.game.events.on("game-props", this.onProps, this);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.scale.off("resize", this.applyCameraZoom, this);
       this.game.events.off("game-props", this.onProps, this);
     });
   }
+
+  /** Fill the screen; wider view so more of campus is visible. */
+  private applyCameraZoom = () => {
+    const camera = this.cameras.main;
+    // ~28 tiles across → zoomed out enough to read the campus layout.
+    const tilesAcross = 28;
+    const zoomX = camera.width / (TILE_SIZE * tilesAcross);
+    const zoomY = camera.height / (TILE_SIZE * (tilesAcross * 0.62));
+    const zoom = Math.max(1.5, Math.min(zoomX, zoomY));
+    camera.setZoom(zoom);
+  };
 
   private onProps = (next: GameRuntimeProps) => {
     this.player.setName(next.playerName);

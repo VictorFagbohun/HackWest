@@ -18,15 +18,18 @@ export interface GameRuntimeProps {
   selectedCatalogId: string | null;
 }
 
+type PhaserGameHandle = {
+  destroy: (removeCanvas: boolean, noReturn?: boolean) => void;
+  events?: { emit: (event: string, payload: GameRuntimeProps) => void };
+  scale?: { refresh: () => void };
+};
+
 export function usePhaserGame(
   hostRef: React.RefObject<HTMLDivElement | null>,
   props: GameRuntimeProps,
   bridge: PhaserBridge,
 ) {
-  const gameRef = useRef<{
-    destroy: (removeCanvas: boolean, noReturn?: boolean) => void;
-    events?: { emit: (event: string, payload: GameRuntimeProps) => void };
-  } | null>(null);
+  const gameRef = useRef<PhaserGameHandle | null>(null);
   const propsRef = useRef(props);
   const bridgeRef = useRef(bridge);
 
@@ -38,6 +41,7 @@ export function usePhaserGame(
     if (!host) return;
 
     let cancelled = false;
+    let resizeObserver: ResizeObserver | null = null;
 
     const start = async () => {
       try {
@@ -50,6 +54,12 @@ export function usePhaserGame(
           getBridge: () => bridgeRef.current,
         });
         gameRef.current = game;
+
+        resizeObserver = new ResizeObserver(() => {
+          game.scale.refresh();
+        });
+        resizeObserver.observe(hostRef.current);
+        game.scale.refresh();
       } catch (error) {
         console.error("[GameWorld] failed to start Phaser", error);
       }
@@ -59,6 +69,7 @@ export function usePhaserGame(
 
     return () => {
       cancelled = true;
+      resizeObserver?.disconnect();
       gameRef.current?.destroy(true);
       gameRef.current = null;
       host.replaceChildren();

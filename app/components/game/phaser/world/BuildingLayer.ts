@@ -9,6 +9,7 @@ import {
 export interface PlacedSprite extends Phaser.Physics.Arcade.Sprite {
   worldObject: WorldObject;
   catalogItem: CatalogItem;
+  groundShadow?: Phaser.GameObjects.Ellipse;
 }
 
 export class BuildingLayer {
@@ -21,7 +22,10 @@ export class BuildingLayer {
   }
 
   sync(objects: WorldObject[]) {
-    this.placed.forEach((sprite) => sprite.destroy());
+    this.placed.forEach((sprite) => {
+      sprite.groundShadow?.destroy();
+      sprite.destroy();
+    });
     this.placed = [];
     this.group.clear(true, true);
 
@@ -35,6 +39,18 @@ export class BuildingLayer {
   private spawn(object: WorldObject, item: CatalogItem) {
     const x = object.x * TILE_SIZE + (item.width * TILE_SIZE) / 2;
     const y = object.y * TILE_SIZE + (item.height * TILE_SIZE) / 2;
+    const footprintY = y + (item.height * TILE_SIZE) / 2 - 2;
+
+    const shadow = this.scene.add.ellipse(
+      x,
+      footprintY,
+      item.width * TILE_SIZE * 0.82,
+      Math.max(5, item.height * 3.2),
+      0x1a120c,
+      item.kind === "building" ? 0.28 : 0.2,
+    );
+    shadow.setDepth(footprintY - 0.1);
+
     const sprite = this.scene.physics.add.staticSprite(
       x,
       y,
@@ -42,8 +58,9 @@ export class BuildingLayer {
     ) as PlacedSprite;
     sprite.worldObject = object;
     sprite.catalogItem = item;
+    sprite.groundShadow = shadow;
     sprite.setOrigin(0.5, 0.5);
-    sprite.setDepth(y + (item.height * TILE_SIZE) / 2);
+    sprite.setDepth(footprintY);
     sprite.refreshBody();
     if (item.kind === "decor" && item.height === 1 && item.width === 1) {
       const body = sprite.body as Phaser.Physics.Arcade.StaticBody | null;
@@ -72,8 +89,8 @@ export class BuildingLayer {
       this.ghost = this.scene.add.image(0, 0, item.textureKey);
     }
     this.ghost.setVisible(true);
-    this.ghost.setAlpha(valid ? 0.7 : 0.35);
-    this.ghost.setTint(valid ? 0xffffff : 0xff5555);
+    this.ghost.setAlpha(valid ? 0.72 : 0.38);
+    this.ghost.setTint(valid ? 0xffffff : 0xff6666);
     this.ghost.setPosition(
       tileX * TILE_SIZE + (item.width * TILE_SIZE) / 2,
       tileY * TILE_SIZE + (item.height * TILE_SIZE) / 2,

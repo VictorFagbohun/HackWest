@@ -39,6 +39,15 @@ export interface GameWorldProps {
   playerName: string;
   onWorldChange?: (world: WorldData) => void;
   onCoinsChange?: (coins: number) => void;
+  onEditableChange?: (editable: boolean) => void;
+}
+
+export function catalogAssetPath(item: CatalogItem): string {
+  const file = item.textureKey
+    .replace(/^building-/, "")
+    .replace(/^decor-/, "");
+  const folder = item.kind === "building" ? "buildings" : "decorations";
+  return `/game/${folder}/${file}.png`;
 }
 
 export const TILE_SIZE = 16;
@@ -157,6 +166,35 @@ export const CATALOG: CatalogItem[] = [
     height: 1,
     textureKey: "decor-mushrooms",
   },
+  {
+    id: "grass-flower",
+    name: "Wildflowers",
+    kind: "decor",
+    cost: 12,
+    width: 1,
+    height: 1,
+    textureKey: "decor-grass-flower",
+  },
+  {
+    id: "sign",
+    name: "Campus Sign",
+    kind: "decor",
+    cost: 55,
+    width: 1,
+    height: 1,
+    textureKey: "decor-sign",
+    interactLabel: "West Quad — welcome, explorers",
+  },
+  {
+    id: "well",
+    name: "Well",
+    kind: "decor",
+    cost: 90,
+    width: 1,
+    height: 1,
+    textureKey: "decor-well",
+    interactLabel: "An old campus well",
+  },
 ];
 
 export const catalogById = Object.fromEntries(
@@ -176,18 +214,29 @@ export function createStarterWorld(): WorldData {
       { id: "b-career", catalogId: "career", kind: "building", x: 18, y: 24 },
       { id: "d-pine-1", catalogId: "tree-pine", kind: "decor", x: 5, y: 4 },
       { id: "d-pine-2", catalogId: "tree-pine", kind: "decor", x: 8, y: 3 },
+      { id: "d-pine-3", catalogId: "tree-pine", kind: "decor", x: 43, y: 5 },
       { id: "d-oak-1", catalogId: "tree-round", kind: "decor", x: 41, y: 11 },
       { id: "d-oak-2", catalogId: "tree-round", kind: "decor", x: 3, y: 27 },
+      { id: "d-oak-3", catalogId: "tree-round", kind: "decor", x: 14, y: 29 },
       { id: "d-autumn-1", catalogId: "tree-autumn", kind: "decor", x: 40, y: 27 },
+      { id: "d-autumn-2", catalogId: "tree-autumn", kind: "decor", x: 36, y: 4 },
       { id: "d-bush-1", catalogId: "bush", kind: "decor", x: 16, y: 15 },
       { id: "d-bush-2", catalogId: "bush", kind: "decor", x: 30, y: 16 },
+      { id: "d-bush-3", catalogId: "bush", kind: "decor", x: 11, y: 22 },
       { id: "d-flowers-1", catalogId: "flowers", kind: "decor", x: 22, y: 15 },
       { id: "d-flowers-2", catalogId: "flowers", kind: "decor", x: 27, y: 21 },
+      { id: "d-wild-1", catalogId: "grass-flower", kind: "decor", x: 19, y: 18 },
+      { id: "d-wild-2", catalogId: "grass-flower", kind: "decor", x: 29, y: 18 },
+      { id: "d-wild-3", catalogId: "grass-flower", kind: "decor", x: 24, y: 22 },
       { id: "d-bench-1", catalogId: "bench", kind: "decor", x: 21, y: 19 },
       { id: "d-bench-2", catalogId: "bench", kind: "decor", x: 27, y: 19 },
       { id: "d-lamp-1", catalogId: "lamp", kind: "decor", x: 20, y: 17 },
       { id: "d-lamp-2", catalogId: "lamp", kind: "decor", x: 28, y: 17 },
+      { id: "d-lamp-3", catalogId: "lamp", kind: "decor", x: 15, y: 10 },
       { id: "d-shroom-1", catalogId: "mushrooms", kind: "decor", x: 38, y: 11 },
+      { id: "d-shroom-2", catalogId: "mushrooms", kind: "decor", x: 6, y: 28 },
+      { id: "d-sign-1", catalogId: "sign", kind: "decor", x: 24, y: 17 },
+      { id: "d-well-1", catalogId: "well", kind: "decor", x: 12, y: 8 },
     ],
   };
 }
