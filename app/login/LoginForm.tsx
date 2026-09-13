@@ -35,7 +35,7 @@ export function LoginForm() {
           <button
             className="auth-text-button"
             type="button"
-            onClick={() => router.push("/api/auth/login?connection=email&prompt=login")}
+            onClick={() => router.push("/api/auth/login")}
           >
             Forgot password?
           </button>
