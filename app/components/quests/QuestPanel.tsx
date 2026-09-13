@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import type { QuestProgress } from "@/types/social";
 
 interface QuestPanelProps {
@@ -13,15 +16,39 @@ const categoryIcon = {
 
 export function QuestPanel({ quests, onClaim }: QuestPanelProps) {
   const completed = quests.filter((quest) => quest.claimed).length;
+  const [celebratingQuestId, setCelebratingQuestId] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const celebrationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (celebrationTimer.current) clearTimeout(celebrationTimer.current);
+    };
+  }, []);
+
+  const handleClaim = (quest: QuestProgress) => {
+    if (celebrationTimer.current) clearTimeout(celebrationTimer.current);
+
+    setCelebratingQuestId(quest.id);
+    setAnnouncement(
+      `Reward claimed: ${quest.rewardXp} XP and ${quest.rewardCoins} coins.`,
+    );
+    onClaim(quest);
+
+    celebrationTimer.current = setTimeout(() => {
+      setCelebratingQuestId(null);
+    }, 1200);
+  };
 
   return (
     <section aria-labelledby="quests-heading">
-      <div className="mb-4 flex items-end justify-between gap-3">
+      <p className="sr-only" aria-live="polite">{announcement}</p>
+      <div className="quest-panel-header mb-4 flex items-end justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.22em] text-emerald-200/60">Adventure log</p>
-          <h2 id="quests-heading" className="text-xl text-amber-100">Today&apos;s quests</h2>
+          <p className="quest-panel-eyebrow text-[10px] uppercase tracking-[0.22em]">Adventure log</p>
+          <h2 id="quests-heading" className="quest-panel-title text-xl">Today&apos;s quests</h2>
         </div>
-        <span className="rounded border border-emerald-800 bg-emerald-950/70 px-2 py-1 text-xs text-emerald-200">
+        <span className="quest-panel-count rounded px-2 py-1 text-xs">
           {completed}/{quests.length} claimed
         </span>
       </div>
@@ -31,33 +58,48 @@ export function QuestPanel({ quests, onClaim }: QuestPanelProps) {
           const progress = Math.min(quest.progress, quest.goal);
           const percent = Math.round((progress / quest.goal) * 100);
           const ready = progress >= quest.goal;
+          const celebrating = celebratingQuestId === quest.id;
 
           return (
-            <article key={quest.id} className={`rounded border-2 p-3 ${quest.claimed ? "border-emerald-900/70 bg-emerald-950/40" : "border-amber-900 bg-[#21170f]"}`}>
+            <article key={quest.id} className={`quest-panel-card rounded border-2 p-3 ${quest.claimed ? "quest-panel-card-claimed" : ""} ${celebrating ? "quest-panel-card-celebrating" : ""}`}>
+              {celebrating ? (
+                <div className="quest-reward-celebration" aria-hidden="true">
+                  <span className="quest-reward-toast">
+                    <strong>Reward claimed!</strong>
+                    <small>+{quest.rewardXp} XP · +{quest.rewardCoins} coins</small>
+                  </span>
+                  {Array.from({ length: 8 }, (_, index) => (
+                    <span
+                      key={index}
+                      className={`quest-reward-particle ${index % 2 === 0 ? "dashboard-icon-coins" : "dashboard-icon-xp"}`}
+                    />
+                  ))}
+                </div>
+              ) : null}
               <div className="flex gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded border border-amber-800 bg-[#342315] text-lg" aria-hidden="true">
+                <div className="quest-panel-category-icon flex h-10 w-10 shrink-0 items-center justify-center rounded text-lg" aria-hidden="true">
                   {categoryIcon[quest.category]}
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-sm text-amber-100">{quest.title}</p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-stone-400">{quest.description}</p>
+                      <p className="quest-panel-quest-title text-sm">{quest.title}</p>
+                      <p className="quest-panel-description mt-0.5 text-xs leading-relaxed">{quest.description}</p>
                     </div>
-                    <span className="shrink-0 text-xs text-amber-300">+{quest.rewardCoins}c</span>
+                    <span className="quest-panel-coins shrink-0 text-xs">+{quest.rewardCoins}c</span>
                   </div>
                   <div className="mt-3 flex items-center gap-2">
-                    <div className="h-2 flex-1 overflow-hidden rounded bg-stone-800" role="progressbar" aria-label={`${quest.title} progress`} aria-valuemin={0} aria-valuemax={quest.goal} aria-valuenow={progress}>
-                      <div className="h-full bg-emerald-500 transition-all" style={{ width: `${percent}%` }} />
+                    <div className="quest-panel-progress h-2 flex-1 overflow-hidden rounded" role="progressbar" aria-label={`${quest.title} progress`} aria-valuemin={0} aria-valuemax={quest.goal} aria-valuenow={progress}>
+                      <div className="quest-panel-progress-fill h-full transition-all" style={{ width: `${percent}%` }} />
                     </div>
-                    <span className="w-9 text-right text-[11px] text-stone-400">{progress}/{quest.goal}</span>
+                    <span className="quest-panel-progress-value w-9 text-right text-[11px]">{progress}/{quest.goal}</span>
                   </div>
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[11px] text-violet-300">+{quest.rewardXp} XP</span>
+                    <span className="quest-panel-xp text-[11px]">+{quest.rewardXp} XP</span>
                     {quest.claimed ? (
-                      <span className="text-xs text-emerald-300">✓ Claimed</span>
+                      <span className="quest-panel-claimed text-xs">✓ Claimed</span>
                     ) : (
-                      <button type="button" disabled={!ready} onClick={() => onClaim(quest)} className="rounded border border-amber-600 bg-amber-800 px-3 py-1 text-xs text-amber-50 transition hover:bg-amber-700 disabled:cursor-not-allowed disabled:border-stone-700 disabled:bg-stone-800 disabled:text-stone-500">
+                      <button type="button" disabled={!ready} onClick={() => handleClaim(quest)} className="quest-panel-action rounded px-3 py-1 text-xs transition disabled:cursor-not-allowed">
                         {ready ? "Claim reward" : "In progress"}
                       </button>
                     )}

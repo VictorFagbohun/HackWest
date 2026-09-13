@@ -1,11 +1,5 @@
-import type { Quest } from "@/types/api";
-
-const categoryLabels: Record<Quest["category"], string> = {
-  SCHOLAR: "Scholar",
-  WELLNESS: "Wellness",
-  COMMUNITY: "Community",
-  CAREER: "Career",
-};
+import type { Quest } from "./mockData";
+import { categoryLabels } from "./mockData";
 
 const categoryAssets: Record<Quest["category"], string> = {
   SCHOLAR: "/game/buildings/library.png",
