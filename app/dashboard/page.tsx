@@ -1,9 +1,7 @@
 import Link from "next/link";
-import { requirePlayer } from "@/lib/auth";
+import { playerProfile } from "./mockData";
 
-export default async function DashboardHomePage() {
-  const playerProfile = await requirePlayer();
-
+export default function DashboardHomePage() {
   return (
     <div className="dashboard-home-menu">
       <section className="dashboard-character-stage" aria-labelledby="home-character-name">
