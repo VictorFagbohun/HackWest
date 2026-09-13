@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { playerProfile } from "./mockData";
+import type { PlayerProfile } from "@/types/api";
 import { useSocialQuest } from "./SocialQuestProvider";
 
 const navigation = [
@@ -15,7 +15,7 @@ const navigation = [
   { href: "/dashboard/profile", label: "Profile", icon: "●" },
 ];
 
-export function DashboardShell({ children }: { children: React.ReactNode }) {
+export function DashboardShell({ player, children }: { player: PlayerProfile; children: React.ReactNode }) {
   const pathname = usePathname();
   const { coins, xp } = useSocialQuest();
 
@@ -54,8 +54,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <div className="dashboard-player-card">
           <div className="dashboard-mini-avatar" aria-hidden="true" />
           <div>
-            <strong>{playerProfile.name}</strong>
-            <span>Level {playerProfile.level}</span>
+            <strong>{player.name}</strong>
+            <span>Level {player.level}</span>
           </div>
         </div>
       </aside>
@@ -63,13 +63,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <div className="dashboard-workspace">
         <header className="dashboard-topbar">
           <div>
-            <span>{playerProfile.university}</span>
-            <strong>Welcome back, {playerProfile.name}</strong>
+            <span>{player.university}</span>
+            <strong>Welcome back, {player.name}</strong>
           </div>
           <div className="dashboard-resources" aria-label="Player resources">
             <span><i className="dashboard-resource-icon dashboard-icon-xp" aria-hidden="true" /> <b>{xp}</b> XP</span>
             <span><i className="dashboard-resource-icon dashboard-icon-coins" aria-hidden="true" /> <b>{coins.toLocaleString()}</b> coins</span>
-            <a href="/api/auth/logout" style={{ marginLeft: '1rem', padding: '0.5rem 1rem', backgroundColor: '#f0f0f0', borderRadius: '4px', textDecoration: 'none', fontSize: '0.9rem' }}>Sign out</a>
+            <a href="/auth/logout" style={{ marginLeft: '1rem', padding: '0.5rem 1rem', backgroundColor: '#f0f0f0', borderRadius: '4px', textDecoration: 'none', fontSize: '0.9rem' }}>Sign out</a>
           </div>
         </header>
         <main className="dashboard-content">{children}</main>
