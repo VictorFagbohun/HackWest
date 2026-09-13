@@ -902,6 +902,42 @@ canvas {
   letter-spacing: 0.04em;
 }
 
+.dashboard-quest-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dashboard-quest-icon {
+  flex: none;
+  width: 30px;
+  height: 25px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+.dashboard-reward-icon,
+.dashboard-resource-icon {
+  display: inline-block;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  background-repeat: no-repeat;
+  image-rendering: pixelated;
+}
+
+.dashboard-icon-xp {
+  background-image: url('/game/tilesets/_tiny-dungeon-src.png');
+  background-position: -128px -144px;
+  background-size: 192px 176px;
+}
+
+.dashboard-icon-coins {
+  background-image: url('/game/tilesets/tiny-town.png');
+  background-position: -144px -112px;
+  background-size: 192px 176px;
+}
+
 .dashboard-quest-card h3 {
   margin-top: 9px;
   color: #332419;
@@ -930,6 +966,31 @@ canvas {
   color: #4d3a24;
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+.dashboard-reward-row > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.dashboard-reward-row .dashboard-reward-icon {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  background-repeat: no-repeat;
+}
+
+.dashboard-reward-row .dashboard-icon-xp {
+  background-image: url('/game/tilesets/_tiny-dungeon-src.png');
+  background-position: -128px -144px;
+  background-size: 192px 176px;
+}
+
+.dashboard-reward-row .dashboard-icon-coins {
+  background-image: url('/game/tilesets/tiny-town.png');
+  background-position: -144px -112px;
+  background-size: 192px 176px;
 }
 
 .dashboard-quest-compact {
