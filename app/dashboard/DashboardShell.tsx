@@ -66,8 +66,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <strong>Welcome back, {playerProfile.name}</strong>
           </div>
           <div className="dashboard-resources" aria-label="Player resources">
-            <span><b>{xp}</b> XP</span>
-            <span><b>{coins.toLocaleString()}</b> coins</span>
+            <span><i className="dashboard-resource-icon dashboard-icon-xp" aria-hidden="true" /> <b>{xp}</b> XP</span>
+            <span><i className="dashboard-resource-icon dashboard-icon-coins" aria-hidden="true" /> <b>{coins.toLocaleString()}</b> coins</span>
           </div>
         </header>
         <main className="dashboard-content">{children}</main>
