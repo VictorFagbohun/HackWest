@@ -68,6 +68,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           <div className="dashboard-resources" aria-label="Player resources">
             <span><i className="dashboard-resource-icon dashboard-icon-xp" aria-hidden="true" /> <b>{xp}</b> XP</span>
             <span><i className="dashboard-resource-icon dashboard-icon-coins" aria-hidden="true" /> <b>{coins.toLocaleString()}</b> coins</span>
+            <a href="/api/auth/logout" style={{ marginLeft: '1rem', padding: '0.5rem 1rem', backgroundColor: '#f0f0f0', borderRadius: '4px', textDecoration: 'none', fontSize: '0.9rem' }}>Sign out</a>
           </div>
         </header>
         <main className="dashboard-content">{children}</main>

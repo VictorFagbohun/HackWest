@@ -10,7 +10,7 @@ export function LoginForm() {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    router.push("/dashboard");
+    window.location.href = "/api/auth/login";
   }
 
   return (
