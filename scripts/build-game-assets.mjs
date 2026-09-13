@@ -617,7 +617,7 @@ function main() {
       "Kenney Tiny Dungeon — CC0 1.0 Universal — https://kenney.nl/assets/tiny-dungeon",
       "",
       "Campus extras (water, paths, benches, lamps, flower beds, fountain)",
-      "are original 16x16 tiles created for HackWest.",
+      "are original 16x16 tiles created for Campus Quest.",
       "",
       "Attribution is not required for Kenney CC0 packs; we credit Kenney.nl anyway.",
       "",

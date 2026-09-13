@@ -37,6 +37,7 @@ export interface GameWorldProps {
   coins: number;
   editable: boolean;
   playerName: string;
+  worldOwnerName?: string;
   onWorldChange?: (world: WorldData) => void;
   onCoinsChange?: (coins: number) => void;
   onEditableChange?: (editable: boolean) => void;

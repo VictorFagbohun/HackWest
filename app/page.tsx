@@ -5,8 +5,12 @@ export default function LandingPage() {
   return (
     <main className="login-screen bg-[#0b1410]">
       <header className="text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100/90">Your next adventure awaits</p>
-        <h1 className="mt-3 text-4xl text-amber-100 sm:text-5xl">Campus Quest</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-100/90">
+          Your next adventure awaits
+        </p>
+        <h1 className="mt-3 text-4xl text-amber-100 sm:text-5xl">
+          Campus Quest
+        </h1>
       </header>
       <WoodlandScene />
       <Link

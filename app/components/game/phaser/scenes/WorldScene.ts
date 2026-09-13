@@ -195,7 +195,7 @@ export class WorldScene extends Phaser.Scene {
       this.player.sprite.y,
       28,
     );
-    const hoverPrompt = inspectPrompt(target, props.playerName);
+    const hoverPrompt = inspectPrompt(target, props.worldOwnerName);
     if (hoverPrompt !== this.lastPrompt) {
       this.lastPrompt = hoverPrompt;
       this.context().getBridge().onPrompt(hoverPrompt);
@@ -208,7 +208,7 @@ export class WorldScene extends Phaser.Scene {
     ) {
       this.context()
         .getBridge()
-        .onPrompt(inspectPrompt(target, props.playerName));
+        .onPrompt(inspectPrompt(target, props.worldOwnerName));
     }
 
     if (

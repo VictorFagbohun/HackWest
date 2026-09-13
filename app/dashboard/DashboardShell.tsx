@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { playerProfile } from "./mockData";
+import { useSocialQuest } from "./SocialQuestProvider";
 
 const navigation = [
   { href: "/dashboard", label: "Home", icon: "⌂" },
@@ -15,6 +16,7 @@ const navigation = [
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { coins, xp } = useSocialQuest();
 
   if (pathname === "/dashboard/world") {
     return <div className="dashboard-world-shell">{children}</div>;
@@ -64,8 +66,8 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <strong>Welcome back, {playerProfile.name}</strong>
           </div>
           <div className="dashboard-resources" aria-label="Player resources">
-            <span><i className="dashboard-resource-icon dashboard-icon-xp" aria-hidden="true" /> <b>{playerProfile.xp}</b> XP</span>
-            <span><i className="dashboard-resource-icon dashboard-icon-coins" aria-hidden="true" /> <b>{playerProfile.coins.toLocaleString()}</b> coins</span>
+            <span><i className="dashboard-resource-icon dashboard-icon-xp" aria-hidden="true" /> <b>{xp}</b> XP</span>
+            <span><i className="dashboard-resource-icon dashboard-icon-coins" aria-hidden="true" /> <b>{coins.toLocaleString()}</b> coins</span>
           </div>
         </header>
         <main className="dashboard-content">{children}</main>

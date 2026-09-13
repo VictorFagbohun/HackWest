@@ -14,6 +14,7 @@ export interface GameRuntimeProps {
   coins: number;
   editable: boolean;
   playerName: string;
+  worldOwnerName: string;
   buildMode: boolean;
   selectedCatalogId: string | null;
 }

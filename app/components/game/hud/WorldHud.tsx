@@ -34,9 +34,9 @@ export function WorldHud({
     <div className="hud-root">
       <header className="hud-top">
         <div className="hud-brand">
-          <span className="hud-brand-mark">HackWest</span>
+          <span className="hud-brand-mark">Campus Quest</span>
           <div>
-            <p className="hud-eyebrow">Campus World</p>
+            <p className="hud-eyebrow">Open World</p>
             <h1 className="hud-title">{worldName}</h1>
           </div>
         </div>

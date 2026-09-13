@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { DashboardShell } from "./DashboardShell";
+import { SocialQuestProvider } from "./SocialQuestProvider";
 
 export const metadata: Metadata = {
   title: "Dashboard | Campus Quest",
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return <DashboardShell>{children}</DashboardShell>;
+  return (
+    <SocialQuestProvider>
+      <DashboardShell>{children}</DashboardShell>
+    </SocialQuestProvider>
+  );
 }
