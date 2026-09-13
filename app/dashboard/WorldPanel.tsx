@@ -1,13 +1,13 @@
 "use client";
 
 import { GameWorld } from "@/app/components/game/GameWorld";
-import { playerProfile } from "./mockData";
 import { useSocialQuest } from "./SocialQuestProvider";
 
 export function WorldPanel() {
   const {
     activeFriend,
     coins,
+    player,
     returnHome,
     setCoins,
     setHomeWorld,
@@ -32,8 +32,8 @@ export function WorldPanel() {
         world={viewedWorld}
         coins={coins}
         editable={!activeFriend}
-        playerName={playerProfile.name}
-        worldOwnerName={activeFriend?.name ?? playerProfile.name}
+        playerName={player.name}
+        worldOwnerName={activeFriend?.name ?? player.name}
         onWorldChange={activeFriend ? undefined : setHomeWorld}
         onCoinsChange={activeFriend ? undefined : setCoins}
       />

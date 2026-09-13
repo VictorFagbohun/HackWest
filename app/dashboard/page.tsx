@@ -1,15 +1,17 @@
 import Link from "next/link";
 import { QuestCard } from "./QuestCard";
-import { playerProfile, quests } from "./mockData";
+import { requirePlayer } from "@/lib/auth";
+import { getQuests } from "@/lib/quest-service";
 
-const stats = [
-  { key: "knowledge", label: "Knowledge", value: playerProfile.stats.knowledge },
-  { key: "wellness", label: "Wellness", value: playerProfile.stats.wellness },
-  { key: "community", label: "Community", value: playerProfile.stats.community },
-  { key: "career", label: "Career", value: playerProfile.stats.career },
-];
+export default async function DashboardHomePage() {
+  const [playerProfile, quests] = await Promise.all([requirePlayer(), getQuests()]);
+  const stats = [
+    { key: "knowledge", label: "Knowledge", value: playerProfile.stats.knowledge },
+    { key: "wellness", label: "Wellness", value: playerProfile.stats.wellness },
+    { key: "community", label: "Community", value: playerProfile.stats.community },
+    { key: "career", label: "Career", value: playerProfile.stats.career },
+  ];
 
-export default function DashboardHomePage() {
   return (
     <div className="dashboard-page">
       <section className="dashboard-page-heading">
