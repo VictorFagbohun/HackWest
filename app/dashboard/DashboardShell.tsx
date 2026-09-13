@@ -9,6 +9,7 @@ const navigation = [
   { href: "/dashboard", label: "Home", icon: "⌂" },
   { href: "/dashboard/quests", label: "Quests", icon: "◆" },
   { href: "/dashboard/world", label: "Open World", icon: "◎" },
+  { href: "/dashboard/shop", label: "Shop", icon: "¤" },
   { href: "/dashboard/friends", label: "Friends", icon: "♣" },
   { href: "/dashboard/rankings", label: "Rankings", icon: "▲" },
   { href: "/dashboard/profile", label: "Profile", icon: "●" },
