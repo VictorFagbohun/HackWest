@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { authConfigured } from "@/lib/auth0";
+import { authConfigured, getAuth0 } from "@/lib/auth0";
 import { requirePlayer } from "@/lib/auth";
 import { DashboardShell } from "./DashboardShell";
 import { SocialQuestProvider } from "./SocialQuestProvider";
@@ -17,11 +17,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect("/");
   }
 
-  await requirePlayer();
+  const session = await getAuth0().getSession();
+  if (!session?.user?.sub) {
+    redirect("/login");
+  }
+
+  const player = await requirePlayer();
 
   return (
-    <SocialQuestProvider>
-      <DashboardShell>{children}</DashboardShell>
+    <SocialQuestProvider player={player}>
+      <DashboardShell player={player}>{children}</DashboardShell>
     </SocialQuestProvider>
   );
 }

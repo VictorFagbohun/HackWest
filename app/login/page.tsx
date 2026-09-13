@@ -11,12 +11,16 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
+const RETURN_TO = "/dashboard";
+const loginHref = `/auth/login?${new URLSearchParams({ returnTo: RETURN_TO })}`;
+const signupHref = `/auth/login?${new URLSearchParams({ screen_hint: "signup", returnTo: RETURN_TO })}`;
+
 export default async function LoginPage() {
   const configured = authConfigured();
   const session = configured ? await getAuth0().getSession() : null;
 
   if (session?.user?.sub) {
-    redirect("/dashboard");
+    redirect(RETURN_TO);
   }
 
   return (
@@ -33,9 +37,16 @@ export default async function LoginPage() {
           <span>Continue your campus adventure.</span>
         </header>
         {configured ? (
-          <Link className="auth-submit auth-submit-link" href="/auth/login">
-            Continue with Auth0
-          </Link>
+          // Plain anchors, not <Link>: these hit Auth0's route handlers, and prefetching them would start a login transaction.
+          <div className="auth-actions">
+            <a className="auth-submit auth-submit-link" href={loginHref}>
+              Log in
+            </a>
+            <p className="auth-divider">New to campus?</p>
+            <a className="auth-submit auth-submit-link auth-submit-secondary" href={signupHref}>
+              Create an account
+            </a>
+          </div>
         ) : (
           <p className="auth-message" role="status">
             Sign-in is being set up.

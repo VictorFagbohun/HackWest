@@ -6,30 +6,7 @@ import {
   DashboardRankingsPage,
 } from "../SocialQuestSections";
 import { WorldPanel } from "../WorldPanel";
-import { playerProfile } from "../mockData";
-
-const statRows = [
-  {
-    label: "Knowledge",
-    value: playerProfile.stats.knowledge,
-    note: "Scholar quests",
-  },
-  {
-    label: "Wellness",
-    value: playerProfile.stats.wellness,
-    note: "Wellness quests",
-  },
-  {
-    label: "Community",
-    value: playerProfile.stats.community,
-    note: "Community quests",
-  },
-  {
-    label: "Career",
-    value: playerProfile.stats.career,
-    note: "Career quests",
-  },
-];
+import { requirePlayer } from "@/lib/auth";
 
 function PageHeading({
   eyebrow,
@@ -64,7 +41,31 @@ function WorldPage() {
   );
 }
 
-function ProfilePage() {
+async function ProfilePage() {
+  const playerProfile = await requirePlayer();
+  const statRows = [
+    {
+      label: "Knowledge",
+      value: playerProfile.stats.knowledge,
+      note: "Scholar quests",
+    },
+    {
+      label: "Wellness",
+      value: playerProfile.stats.wellness,
+      note: "Wellness quests",
+    },
+    {
+      label: "Community",
+      value: playerProfile.stats.community,
+      note: "Community quests",
+    },
+    {
+      label: "Career",
+      value: playerProfile.stats.career,
+      note: "Career quests",
+    },
+  ];
+
   return (
     <div className="dashboard-page">
       <PageHeading
