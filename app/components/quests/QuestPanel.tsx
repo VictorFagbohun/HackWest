@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import type { QuestProgress } from "@/types/social";
 
 interface QuestPanelProps {
@@ -13,9 +16,33 @@ const categoryIcon = {
 
 export function QuestPanel({ quests, onClaim }: QuestPanelProps) {
   const completed = quests.filter((quest) => quest.claimed).length;
+  const [celebratingQuestId, setCelebratingQuestId] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState("");
+  const celebrationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (celebrationTimer.current) clearTimeout(celebrationTimer.current);
+    };
+  }, []);
+
+  const handleClaim = (quest: QuestProgress) => {
+    if (celebrationTimer.current) clearTimeout(celebrationTimer.current);
+
+    setCelebratingQuestId(quest.id);
+    setAnnouncement(
+      `Reward claimed: ${quest.rewardXp} XP and ${quest.rewardCoins} coins.`,
+    );
+    onClaim(quest);
+
+    celebrationTimer.current = setTimeout(() => {
+      setCelebratingQuestId(null);
+    }, 1200);
+  };
 
   return (
     <section aria-labelledby="quests-heading">
+      <p className="sr-only" aria-live="polite">{announcement}</p>
       <div className="quest-panel-header mb-4 flex items-end justify-between gap-3">
         <div>
           <p className="quest-panel-eyebrow text-[10px] uppercase tracking-[0.22em]">Adventure log</p>
@@ -31,9 +58,24 @@ export function QuestPanel({ quests, onClaim }: QuestPanelProps) {
           const progress = Math.min(quest.progress, quest.goal);
           const percent = Math.round((progress / quest.goal) * 100);
           const ready = progress >= quest.goal;
+          const celebrating = celebratingQuestId === quest.id;
 
           return (
-            <article key={quest.id} className={`quest-panel-card rounded border-2 p-3 ${quest.claimed ? "quest-panel-card-claimed" : ""}`}>
+            <article key={quest.id} className={`quest-panel-card rounded border-2 p-3 ${quest.claimed ? "quest-panel-card-claimed" : ""} ${celebrating ? "quest-panel-card-celebrating" : ""}`}>
+              {celebrating ? (
+                <div className="quest-reward-celebration" aria-hidden="true">
+                  <span className="quest-reward-toast">
+                    <strong>Reward claimed!</strong>
+                    <small>+{quest.rewardXp} XP · +{quest.rewardCoins} coins</small>
+                  </span>
+                  {Array.from({ length: 8 }, (_, index) => (
+                    <span
+                      key={index}
+                      className={`quest-reward-particle ${index % 2 === 0 ? "dashboard-icon-coins" : "dashboard-icon-xp"}`}
+                    />
+                  ))}
+                </div>
+              ) : null}
               <div className="flex gap-3">
                 <div className="quest-panel-category-icon flex h-10 w-10 shrink-0 items-center justify-center rounded text-lg" aria-hidden="true">
                   {categoryIcon[quest.category]}
@@ -57,7 +99,7 @@ export function QuestPanel({ quests, onClaim }: QuestPanelProps) {
                     {quest.claimed ? (
                       <span className="quest-panel-claimed text-xs">✓ Claimed</span>
                     ) : (
-                      <button type="button" disabled={!ready} onClick={() => onClaim(quest)} className="quest-panel-action rounded px-3 py-1 text-xs transition disabled:cursor-not-allowed">
+                      <button type="button" disabled={!ready} onClick={() => handleClaim(quest)} className="quest-panel-action rounded px-3 py-1 text-xs transition disabled:cursor-not-allowed">
                         {ready ? "Claim reward" : "In progress"}
                       </button>
                     )}
