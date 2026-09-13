@@ -344,6 +344,49 @@ canvas {
   box-shadow: 0 2px 0 #203722;
 }
 
+.auth-actions {
+  display: grid;
+  gap: 16px;
+}
+
+.auth-submit-link {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.auth-submit-secondary {
+  border-color: #80552d;
+  background: #fff8dc;
+  color: #3b2a1c;
+  box-shadow: 0 5px 0 #a47a45;
+}
+
+.auth-submit-secondary:hover {
+  background: #fbefc8;
+}
+
+.auth-submit-secondary:active {
+  box-shadow: 0 2px 0 #a47a45;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #7a6650;
+  font-size: 0.875rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  border-top: 2px dashed #c9b27a;
+}
+
 .auth-message {
   min-height: 22px;
   margin-top: 4px;

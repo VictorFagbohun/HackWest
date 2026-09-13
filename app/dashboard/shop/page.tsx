@@ -8,7 +8,6 @@ import {
   type CSSProperties,
 } from "react";
 import { useSocialQuest } from "../SocialQuestProvider";
-import { playerProfile } from "../mockData";
 
 type ShopCategory = "SHIRT" | "HAT" | "SHOES" | "ACCESSORY";
 
@@ -70,7 +69,7 @@ function paintPixels(
   pixels.forEach(([x, y, width, height]) => context.fillRect(x, y, width, height));
 }
 
-function CharacterPreview({ equipped }: { equipped: EquippedItems }) {
+function CharacterPreview({ equipped, playerName }: { equipped: EquippedItems; playerName: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -132,7 +131,7 @@ function CharacterPreview({ equipped }: { equipped: EquippedItems }) {
       width="16"
       height="16"
       role="img"
-      aria-label={`${playerProfile.name}'s character preview`}
+      aria-label={`${playerName}'s character preview`}
     />
   );
 }
@@ -151,7 +150,7 @@ function ItemArt({ item }: { item: ShopItem }) {
 }
 
 export default function ShopPage() {
-  const { coins, setCoins } = useSocialQuest();
+  const { coins, player, setCoins } = useSocialQuest();
   const [filter, setFilter] = useState<"ALL" | ShopCategory>("ALL");
   const [owned, setOwned] = useState(() => new Set(["maroon-shirt", "campus-runners"]));
   const [equipped, setEquipped] = useState<EquippedItems>({
@@ -207,12 +206,12 @@ export default function ShopPage() {
         <aside className="shop-preview-panel" aria-label="Character preview">
           <div className="shop-preview-heading">
             <span>Fitting room</span>
-            <h2>{playerProfile.name}</h2>
+            <h2>{player.name}</h2>
           </div>
           <div className="shop-character-stage">
             <span className="shop-preview-spark shop-preview-spark-one" aria-hidden="true">✦</span>
             <span className="shop-preview-spark shop-preview-spark-two" aria-hidden="true">✦</span>
-            <CharacterPreview equipped={equipped} />
+            <CharacterPreview equipped={equipped} playerName={player.name} />
             <span className="shop-character-shadow" aria-hidden="true" />
           </div>
           <div className="shop-equipped-list">

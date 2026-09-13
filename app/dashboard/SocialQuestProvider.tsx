@@ -13,8 +13,8 @@ import type {
   LeaderboardPlayer,
   QuestProgress,
 } from "@/types/social";
+import type { PlayerProfile } from "@/types/api";
 import { createStarterWorld, type WorldData } from "@/types/world";
-import { playerProfile } from "./mockData";
 
 interface SocialQuestContextValue {
   activeFriend: FriendProfile | null;
@@ -23,6 +23,7 @@ interface SocialQuestContextValue {
   friends: FriendProfile[];
   homeWorld: WorldData;
   leaderboard: LeaderboardPlayer[];
+  player: PlayerProfile;
   quests: QuestProgress[];
   returnHome: () => void;
   setCoins: (coins: number) => void;
@@ -37,10 +38,10 @@ const starterWorld = createStarterWorld();
 const starterObjectCount = starterWorld.objects.length;
 const SocialQuestContext = createContext<SocialQuestContextValue | null>(null);
 
-export function SocialQuestProvider({ children }: { children: ReactNode }) {
+export function SocialQuestProvider({ player, children }: { player: PlayerProfile; children: ReactNode }) {
   const [homeWorld, setHomeWorld] = useState<WorldData>(starterWorld);
-  const [coins, setCoins] = useState(playerProfile.coins);
-  const [xp, setXp] = useState(playerProfile.xp);
+  const [coins, setCoins] = useState(player.coins);
+  const [xp, setXp] = useState(player.xp);
   const [claimedQuestIds, setClaimedQuestIds] = useState<string[]>([]);
   const [visitedFriendIds, setVisitedFriendIds] = useState<string[]>([]);
   const [activeFriend, setActiveFriend] = useState<FriendProfile | null>(null);
@@ -70,21 +71,21 @@ export function SocialQuestProvider({ children }: { children: ReactNode }) {
     () => [
       ...LEADERBOARD_PLAYERS,
       {
-        id: playerProfile.id,
-        name: playerProfile.name,
-        initials: playerProfile.name
+        id: player.id,
+        name: player.name,
+        initials: player.name
           .split(" ")
           .map((part) => part[0])
           .join("")
           .slice(0, 2),
         xp,
         level:
-          playerProfile.level +
-          Math.floor((xp - playerProfile.xp) / 150),
+          player.level +
+          Math.floor((xp - player.xp) / 150),
         isCurrentUser: true,
       },
     ],
-    [xp],
+    [player, xp],
   );
 
   const claimQuest = (quest: QuestProgress) => {
@@ -112,6 +113,7 @@ export function SocialQuestProvider({ children }: { children: ReactNode }) {
         friends: FRIENDS,
         homeWorld,
         leaderboard,
+        player,
         quests,
         returnHome,
         setCoins,
