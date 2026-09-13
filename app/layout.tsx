@@ -9,7 +9,7 @@ const pixelify = Pixelify_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "HackWest Campus",
+  title: "Campus Quest",
   description: "A cozy pixel RPG campus for college self-improvement.",
 };
 
