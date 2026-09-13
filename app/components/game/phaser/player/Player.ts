@@ -2,6 +2,10 @@ import Phaser from "phaser";
 import { TILE_SIZE } from "@/types/world";
 
 const SPEED = 76;
+/** Matches walk anim (~8 fps / 4 frames → two steps per cycle). */
+const FOOTSTEP_MS = 250;
+const FOOTSTEP_VOLUME = 0.28;
+const MUTE_STORAGE_KEY = "campus-quest-theme-muted";
 
 export class Player {
   sprite: Phaser.Types.Physics.Arcade.SpriteWithDynamicBody;
@@ -13,6 +17,9 @@ export class Player {
   private facing: "down" | "left" | "right" | "up" = "down";
   private nameTag: Phaser.GameObjects.Text;
   private shadow: Phaser.GameObjects.Ellipse;
+  private footstepElapsed = 0;
+  private wasMoving = false;
+  private awaitingUnlock = false;
 
   constructor(
     private scene: Phaser.Scene,
@@ -54,6 +61,33 @@ export class Player {
       .setDepth(10000);
   }
 
+  private isMuted() {
+    try {
+      return window.localStorage.getItem(MUTE_STORAGE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  }
+
+  private playFootstep() {
+    if (this.isMuted() || !this.scene.cache.audio.exists("footstep")) return;
+
+    if (this.scene.sound.locked) {
+      if (!this.awaitingUnlock) {
+        this.awaitingUnlock = true;
+        this.scene.sound.once(Phaser.Sound.Events.UNLOCKED, () => {
+          this.awaitingUnlock = false;
+        });
+      }
+      return;
+    }
+
+    this.scene.sound.play("footstep", {
+      volume: FOOTSTEP_VOLUME * (0.85 + Math.random() * 0.3),
+      rate: 0.92 + Math.random() * 0.16,
+    });
+  }
+
   setName(playerName: string) {
     this.nameTag.setText(playerName);
   }
@@ -77,10 +111,21 @@ export class Player {
         this.facing = vy < 0 ? "up" : "down";
       }
       this.sprite.anims.play(`walk-${this.facing}`, true);
+
+      if (!this.wasMoving) {
+        this.footstepElapsed = FOOTSTEP_MS;
+      }
+      this.footstepElapsed += this.scene.game.loop.delta;
+      while (this.footstepElapsed >= FOOTSTEP_MS) {
+        this.footstepElapsed -= FOOTSTEP_MS;
+        this.playFootstep();
+      }
     } else {
       this.sprite.setVelocity(0, 0);
       this.sprite.anims.play(`idle-${this.facing}`, true);
+      this.footstepElapsed = 0;
     }
+    this.wasMoving = moving;
 
     this.sprite.setDepth(this.sprite.y);
     this.shadow.setPosition(this.sprite.x, this.sprite.y + 5);

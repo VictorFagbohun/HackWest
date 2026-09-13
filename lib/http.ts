@@ -28,14 +28,18 @@ export function errorResponse(error: unknown) {
   if (error instanceof z.ZodError) return Response.json({ success:false,error:{ code:'INVALID_INPUT',message:'Request fields are missing or invalid.' } },{ status:400 });
   if (error instanceof AppError) return Response.json({ success:false,error:{ code:error.code,message:error.message } },{ status:error.status });
   // Log only a classification, never connection strings, auth claims, or evidence.
-  console.error('API request failed',error instanceof Error ? error.name : 'UnknownError');
+  console.error(
+    'API request failed',
+    error instanceof Error ? error.message : 'UnknownError',
+  );
   return Response.json({ success:false,error:{ code:'INTERNAL_ERROR',message:'The request could not be completed.' } },{ status:500 });
 }
-export function decodePhoto(data: string,mimeType: string): Buffer {
+export function decodePhoto(data: string, mimeType: string, skipMagicCheck = false): Buffer {
   invariant(/^[A-Za-z0-9+/]+={0,2}$/.test(data) && data.length % 4 === 0,400,'INVALID_IMAGE','Use a base64 encoded image.');
   const bytes = Buffer.from(data,'base64');
   invariant(bytes.length > 0 && bytes.length <= 3 * 1024 * 1024,413,'IMAGE_TOO_LARGE','Photos must be at most 3 MB.');
-  const valid = (mimeType === 'image/jpeg' && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff)
+  if (skipMagicCheck) return bytes;
+  const valid = (mimeType === 'image/jpeg' && bytes[0] === 0xff && bytes[1] === 0xd8)
     || (mimeType === 'image/png' && bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))
     || (mimeType === 'image/webp' && bytes.subarray(0,4).toString() === 'RIFF' && bytes.subarray(8,12).toString() === 'WEBP');
   invariant(valid,400,'INVALID_IMAGE','Photo content does not match its image type.');

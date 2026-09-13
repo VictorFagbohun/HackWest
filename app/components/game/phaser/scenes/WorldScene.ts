@@ -80,7 +80,7 @@ export class WorldScene extends Phaser.Scene {
     this.cameras.main.setRoundPixels(true);
     this.applyCameraZoom();
     this.scale.on("resize", this.applyCameraZoom, this);
-    this.cameras.main.fadeIn(350, 10, 18, 12);
+    this.cameras.main.fadeIn(420, 10, 18, 12);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.player.sprite.setCollideWorldBounds(true);
 
@@ -98,6 +98,11 @@ export class WorldScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.scale.off("resize", this.applyCameraZoom, this);
       this.game.events.off("game-props", this.onProps, this);
+    });
+
+    // Let the React overlay fade after the first frame is painted.
+    this.time.delayedCall(80, () => {
+      this.context().getBridge().onReady?.();
     });
   }
 

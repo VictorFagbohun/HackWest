@@ -30,6 +30,8 @@ export class BootScene extends Phaser.Scene {
     this.load.image("decor-mushrooms", "/game/decorations/mushrooms.png");
     this.load.image("decor-sign", "/game/decorations/sign.png");
     this.load.image("decor-well", "/game/decorations/well.png");
+
+    this.load.audio("footstep", "/game/audio/footstep.wav");
   }
 
   create() {

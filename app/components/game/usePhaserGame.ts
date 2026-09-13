@@ -7,6 +7,7 @@ export interface PhaserBridge {
   onWorldChange: (world: WorldData) => void;
   onCoinsChange: (coins: number) => void;
   onPrompt: (prompt: string | null) => void;
+  onReady?: () => void;
 }
 
 export interface GameRuntimeProps {

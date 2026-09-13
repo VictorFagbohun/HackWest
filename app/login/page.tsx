@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export const dynamic = "force-dynamic";
 
-const RETURN_TO = "/dashboard";
+const RETURN_TO = "/dashboard?welcome=1";
 const loginHref = `/auth/login?${new URLSearchParams({ returnTo: RETURN_TO })}`;
 const signupHref = `/auth/login?${new URLSearchParams({ screen_hint: "signup", returnTo: RETURN_TO })}`;
 

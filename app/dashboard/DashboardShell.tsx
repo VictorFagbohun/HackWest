@@ -2,24 +2,33 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ThemeMusic } from "@/app/components/ThemeMusic";
+import { useTutorialControls } from "@/app/components/tutorial/TutorialProvider";
 import type { PlayerProfile } from "@/types/api";
 import { useSocialQuest } from "./SocialQuestProvider";
 
 const navigation = [
-  { href: "/dashboard", label: "Home", icon: "⌂" },
-  { href: "/dashboard/quests", label: "Quests", icon: "◆" },
-  { href: "/dashboard/world", label: "Open World", icon: "◎" },
-  { href: "/dashboard/friends", label: "Friends", icon: "♣" },
-  { href: "/dashboard/rankings", label: "Rankings", icon: "▲" },
-  { href: "/dashboard/profile", label: "Profile", icon: "●" },
-];
+  { href: "/dashboard", label: "Home", icon: "⌂", tutorialId: null },
+  { href: "/dashboard/quests", label: "Quests", icon: "◆", tutorialId: "nav-quests" },
+  { href: "/dashboard/world", label: "Open World", icon: "◎", tutorialId: "nav-world" },
+  { href: "/dashboard/shop", label: "Shop", icon: "¤", tutorialId: "nav-shop" },
+  { href: "/dashboard/friends", label: "Friends", icon: "♣", tutorialId: "nav-friends" },
+  { href: "/dashboard/rankings", label: "Rankings", icon: "▲", tutorialId: "nav-rankings" },
+  { href: "/dashboard/profile", label: "Profile", icon: "●", tutorialId: "nav-profile" },
+] as const;
 
 export function DashboardShell({ player, children }: { player: PlayerProfile; children: React.ReactNode }) {
   const pathname = usePathname();
   const { coins, xp } = useSocialQuest();
+  const { enabled: tutorialEnabled, restart: restartTutorial } = useTutorialControls();
 
   if (pathname === "/dashboard/world") {
-    return <div className="dashboard-world-shell">{children}</div>;
+    return (
+      <div className="dashboard-world-shell">
+        <ThemeMusic variant="world" />
+        {children}
+      </div>
+    );
   }
 
   return (
@@ -42,6 +51,7 @@ export function DashboardShell({ player, children }: { player: PlayerProfile; ch
                 className={`dashboard-nav-link ${active ? "dashboard-nav-link-active" : ""}`}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
+                data-tutorial-id={item.tutorialId ?? undefined}
               >
                 <span className="dashboard-nav-icon" aria-hidden="true">{item.icon}</span>
                 <span>{item.label}</span>
@@ -66,9 +76,15 @@ export function DashboardShell({ player, children }: { player: PlayerProfile; ch
             <strong>Welcome back, {player.name}</strong>
           </div>
           <div className="dashboard-resources" aria-label="Player resources">
+            <ThemeMusic variant="shell" />
             <span><i className="dashboard-resource-icon dashboard-icon-xp" aria-hidden="true" /> <b>{xp}</b> XP</span>
             <span><i className="dashboard-resource-icon dashboard-icon-coins" aria-hidden="true" /> <b>{coins.toLocaleString()}</b> coins</span>
-            <a href="/auth/logout" style={{ marginLeft: '1rem', padding: '0.5rem 1rem', backgroundColor: '#f0f0f0', borderRadius: '4px', textDecoration: 'none', fontSize: '0.9rem' }}>Sign out</a>
+            {tutorialEnabled ? (
+              <button type="button" className="dashboard-replay-tutorial" onClick={restartTutorial}>
+                Replay tutorial
+              </button>
+            ) : null}
+            <a href="/auth/logout" className="dashboard-sign-out">Sign out</a>
           </div>
         </header>
         <main className="dashboard-content">{children}</main>

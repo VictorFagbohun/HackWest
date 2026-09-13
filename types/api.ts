@@ -1,3 +1,6 @@
+import type { CharacterOutfit } from '../lib/shop-catalog';
+import type { WorldData } from './world';
+
 export type Stats = { knowledge: number; wellness: number; community: number; career: number };
 export type PlayerProfile = {
   id: string; name: string; university: string; major: string | null;
@@ -11,6 +14,10 @@ export type Quest = {
   verification_policy: 'QR' | 'PHOTO_AI' | 'MANUAL'; minimum_duration_seconds: number;
 };
 export type QuestAttempt = { id: string; questId: string; status: string; startedAt: string };
+export type QuestProgress = Quest & {
+  claimed: boolean;
+  activeAttempt: QuestAttempt | null;
+};
 export type CompletionResult = {
   success: true; xpGained: number; coinsGained: number; leveledUp: boolean;
   newLevel: number; newXp: number; newCoins: number; updatedStats: Stats;
@@ -21,3 +28,12 @@ export type World = { userId: string; placedItems: { itemId: string; x: number; 
 export type LeaderboardEntry = { userId: string; name: string; level: number; xp: number; rank: number };
 export type PlayerSearchResult = { userId: string; name: string; university: string; level: number };
 export type ApiFailure = { success: false; error: { code: string; message: string } };
+export type CampusProgressResult = {
+  coins: number;
+  xp: number;
+  level: number;
+  claimedQuestIds: string[];
+  visitedFriendIds: string[];
+  homeWorld: WorldData | null;
+  outfit: CharacterOutfit;
+};

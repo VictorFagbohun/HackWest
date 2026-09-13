@@ -1,12 +1,12 @@
 # Backend handoff
 
-This is the implemented supplement to [the original naming contract](campus-quest-naming-contract.md). Existing profile/world/reward response fields, catalog IDs, categories and QR location codes are preserved.
+This is the implemented supplement to [the original naming contract](campus-quest-naming-contract.md). Existing profile/world/reward response fields, catalog IDs, categories and location codes are preserved. Campus quests verify with **on-site GPS + Gemini photo**, not QR codes.
 
 ## Important changes for teammates
 
 1. `getMe()` provides the authenticated player's application UUID. Never use the Auth0 subject as the player UUID.
-2. `completeQuest(userId, attemptId, evidence)` replaces the proposed `completeQuest(userId, questId, verifiedBy)`. Start a photo quest to get the attempt ID, then submit evidence. Callers cannot assert that verification passed.
-3. `completeQuestByLocation(userId, locationCode, attemptId?)` preserves the original two-argument use for the seeded daily/one-time QR quests. Repeatable or timed QR quests should start an attempt first; repeatable quests must submit its ID.
+2. `completeQuest(userId, attemptId, evidence)` replaces the proposed `completeQuest(userId, questId, verifiedBy)`. Start a photo quest to get the attempt ID, then submit photo evidence plus device GPS. Callers cannot assert that verification passed.
+3. `completeQuestByLocation` is deprecated; seeded campus quests use `PHOTO_AI` with GPS + photo instead of QR check-ins.
 4. `savePlayerWorld`, `getInventory`, `getItems`, `getWorldConfig`, `getFriends`, and `acceptFriend` complete the shop/map/friend workflows missing from the original contract.
 5. `addFriend` sends an invitation; only the recipient may call `acceptFriend`. Crossing requests do not auto-accept.
 6. All routes except health require a session. Writes compare the path's player UUID to that session and validate same-origin requests. The browser's `readOnly` prop is only a UI setting.
@@ -25,10 +25,11 @@ This is the implemented supplement to [the original naming contract](campus-ques
 | GET | `/players/:id/world` | `{ userId, placedItems: [{ itemId, x, y }] }` |
 | PUT | `/players/:id/world` | `{ placedItems }` → world; replaces all placements |
 | GET | `/players/:id/inventory` | `[{ itemId, placed, x, y }]` |
+| GET | `/players/:id/quest-progress` | Quest list plus `claimed` and `activeAttempt` for the viewer |
 | POST | `/players/:id/purchases` | `{ itemId }` → `{ success, newCoinBalance, ownedItems }` |
 | POST | `/players/:id/quests/:questId/attempts` | No body → `{ id, questId, status, startedAt }` |
-| POST | `/players/:id/quests/by-location` | `{ locationCode, attemptId? }` → completion receipt |
-| POST | `/players/:id/attempts/:attemptId/submit` | `{ mimeType, data }` → completion receipt |
+| POST | `/players/:id/quests/by-location` | Deprecated QR path; prefer photo submit |
+| POST | `/players/:id/attempts/:attemptId/submit` | `{ mimeType, data, location? }` → completion receipt |
 | GET | `/players/:id/attempts/:attemptId` | Attempt plus `verification` and `result` |
 | GET | `/leaderboard?university=...&scope=...` | `[{ userId, name, level, xp, rank }]` |
 | GET | `/players?query=...` | `[{ userId, name, university, level }]` (max 20) |
@@ -43,23 +44,20 @@ All JSON bodies reject unknown top-level fields. Errors use `{ success: false, e
 ## Quest page example
 
 ```ts
-import { getMe, startQuest, completeQuest, completeQuestByLocation } from '@/lib/api';
+import { getMe, startQuest, completeQuest } from '@/lib/api';
 
 const me = await getMe();
-const reward = await completeQuestByLocation(me.id, 'LIBRARY');
-// reward: { success, xpGained, coinsGained, leveledUp, newLevel,
-//           newXp, newCoins, updatedStats }
-
-// At the start of the photo activity:
 const attempt = await startQuest(me.id, photoQuest.id);
-// Persist attempt.id in component/local storage state for reload recovery.
-// At the end, FileReader.readAsDataURL(file), then remove the data URL prefix:
+// Persist attempt.id for reload recovery. After the timer (if any),
+// capture GPS + a photo on site:
 const receipt = await completeQuest(me.id, attempt.id, {
-  mimeType: 'image/jpeg', data: base64WithoutPrefix,
+  mimeType: 'image/jpeg',
+  data: base64WithoutPrefix,
+  location: { latitude, longitude, accuracyMeters },
 });
 ```
 
-`getQuests()` includes `verification_policy` and `minimum_duration_seconds` so the UI can choose QR/photo controls and display the timer. `startedAt` is the server start time. The server enforces duration even if the browser timer is altered. Static QR codes are demo location checks, not proof of physical presence.
+`getQuests()` / `getQuestProgress()` include `verification_policy` and `minimum_duration_seconds`. `startedAt` is the server start time. The server enforces duration, GPS geofencing against campus pins, and Gemini scene checks. Set `GEO_CHECK_DISABLED=true` only for off-campus local demos.
 
 ## World example
 

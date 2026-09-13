@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { authConfigured, getAuth0 } from "@/lib/auth0";
 import { requirePlayer } from "@/lib/auth";
+import { TutorialProvider } from "@/app/components/tutorial/TutorialProvider";
 import { DashboardShell } from "./DashboardShell";
 import { SocialQuestProvider } from "./SocialQuestProvider";
 
@@ -26,7 +27,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <SocialQuestProvider player={player}>
-      <DashboardShell player={player}>{children}</DashboardShell>
+      <TutorialProvider playerName={player.name}>
+        <DashboardShell player={player}>{children}</DashboardShell>
+      </TutorialProvider>
     </SocialQuestProvider>
   );
 }

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CatalogItem, GameWorldProps, WorldData } from "@/types/world";
 import { WorldHud } from "@/app/components/game/hud/WorldHud";
 import { usePhaserGame } from "@/app/components/game/usePhaserGame";
+import { useTutorialWorldReporter } from "@/app/components/tutorial/TutorialProvider";
 
 export function GameWorld({
   world,
@@ -23,6 +24,9 @@ export function GameWorld({
     null,
   );
   const [prompt, setPrompt] = useState<string | null>(null);
+  const [worldReady, setWorldReady] = useState(false);
+  const [loaderGone, setLoaderGone] = useState(false);
+  const reportWorld = useTutorialWorldReporter();
 
   useEffect(() => {
     setLocalWorld(world);
@@ -39,6 +43,31 @@ export function GameWorld({
     }
   }, [editable]);
 
+  useEffect(() => {
+    if (!worldReady) return;
+    const timer = window.setTimeout(() => setLoaderGone(true), 700);
+    return () => window.clearTimeout(timer);
+  }, [worldReady]);
+
+  useEffect(() => {
+    reportWorld?.({
+      editable,
+      buildMode,
+      selectedCatalogId,
+      objectCount: localWorld.objects.length,
+      prompt,
+      worldReady: loaderGone,
+    });
+  }, [
+    reportWorld,
+    editable,
+    buildMode,
+    selectedCatalogId,
+    localWorld.objects.length,
+    prompt,
+    loaderGone,
+  ]);
+
   const handleWorldChange = useCallback(
     (next: WorldData) => {
       setLocalWorld(next);
@@ -54,6 +83,10 @@ export function GameWorld({
     },
     [onCoinsChange],
   );
+
+  const handleReady = useCallback(() => {
+    setWorldReady(true);
+  }, []);
 
   const runtimeProps = useMemo(
     () => ({
@@ -80,6 +113,7 @@ export function GameWorld({
     onWorldChange: handleWorldChange,
     onCoinsChange: handleCoinsChange,
     onPrompt: setPrompt,
+    onReady: handleReady,
   });
 
   const handleSelectItem = (item: CatalogItem) => {
@@ -88,7 +122,7 @@ export function GameWorld({
   };
 
   return (
-    <section className="game-stage">
+    <section className={`game-stage${worldReady ? " game-stage-ready" : ""}`}>
       <WorldHud
         worldName={localWorld.name ?? "Campus"}
         playerName={playerName}
@@ -108,7 +142,30 @@ export function GameWorld({
         ref={hostRef}
         className="game-canvas-host"
         data-testid="game-world-host"
+        data-tutorial-id="canvas"
       />
+      {!loaderGone ? (
+        <div
+          className={`world-loader${worldReady ? " world-loader-exit" : ""}`}
+          aria-live="polite"
+          aria-busy={!worldReady}
+        >
+          <div className="world-loader-sky" aria-hidden="true" />
+          <div className="world-loader-hills" aria-hidden="true" />
+          <div className="world-loader-ground" aria-hidden="true" />
+          <div className="world-loader-cast" aria-hidden="true">
+            <span className="world-loader-walker" />
+          </div>
+          <p className="world-loader-copy">
+            <span>Entering campus</span>
+            <i className="world-loader-dots" aria-hidden="true">
+              <b>.</b>
+              <b>.</b>
+              <b>.</b>
+            </i>
+          </p>
+        </div>
+      ) : null}
     </section>
   );
 }

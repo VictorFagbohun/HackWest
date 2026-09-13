@@ -1,0 +1,12 @@
+---
+description: Never run unit tests in this repository
+alwaysApply: true
+---
+
+# No unit tests
+
+Never run unit tests in this repo in any chat or session.
+
+Do not execute commands such as `npx tsx --test`, `npm test`, `npm run test`, `node --test`, Vitest, Jest, or similar unit-test runners.
+
+Do not suggest running unit tests as a follow-up. Integration tests and other non-unit validation are also out of scope unless the user explicitly asks for them.
