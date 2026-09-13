@@ -37,7 +37,7 @@ export function DashboardQuestsPage() {
         title="Your quests"
         description="Build your campus and connect with friends to earn rewards."
       />
-      <div className="dashboard-panel quest-panel-surface p-4">
+      <div className="dashboard-panel p-4">
         <QuestPanel quests={quests} onClaim={claimQuest} />
       </div>
     </div>
