@@ -12,6 +12,7 @@ export class Player {
   >;
   private facing: "down" | "left" | "right" | "up" = "down";
   private nameTag: Phaser.GameObjects.Text;
+  private shadow: Phaser.GameObjects.Ellipse;
 
   constructor(
     private scene: Phaser.Scene,
@@ -21,6 +22,9 @@ export class Player {
   ) {
     const x = tileX * TILE_SIZE + TILE_SIZE / 2;
     const y = tileY * TILE_SIZE + TILE_SIZE / 2;
+
+    this.shadow = scene.add.ellipse(x, y + 5, 12, 5, 0x1a120c, 0.28);
+    this.shadow.setDepth(y - 0.1);
 
     this.sprite = scene.physics.add.sprite(x, y, "player", 0);
     this.sprite.setSize(10, 8);
@@ -40,7 +44,7 @@ export class Player {
 
     this.nameTag = scene.add
       .text(x, y - 14, playerName, {
-        fontFamily: "monospace",
+        fontFamily: "Pixelify Sans, monospace",
         fontSize: "8px",
         color: "#fff4d2",
         stroke: "#1a140f",
@@ -79,11 +83,14 @@ export class Player {
     }
 
     this.sprite.setDepth(this.sprite.y);
+    this.shadow.setPosition(this.sprite.x, this.sprite.y + 5);
+    this.shadow.setDepth(this.sprite.y - 0.1);
     this.nameTag.setPosition(this.sprite.x, this.sprite.y - 12);
     this.nameTag.setDepth(this.sprite.y + 1);
   }
 
   destroy() {
+    this.shadow.destroy();
     this.nameTag.destroy();
     this.sprite.destroy();
   }

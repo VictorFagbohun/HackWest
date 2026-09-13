@@ -24,9 +24,12 @@ export class BootScene extends Phaser.Scene {
     this.load.image("decor-tree-autumn", "/game/decorations/tree-autumn.png");
     this.load.image("decor-bush", "/game/decorations/bush.png");
     this.load.image("decor-flowers", "/game/decorations/flowers.png");
+    this.load.image("decor-grass-flower", "/game/decorations/grass-flower.png");
     this.load.image("decor-bench", "/game/decorations/bench.png");
     this.load.image("decor-lamp", "/game/decorations/lamp.png");
     this.load.image("decor-mushrooms", "/game/decorations/mushrooms.png");
+    this.load.image("decor-sign", "/game/decorations/sign.png");
+    this.load.image("decor-well", "/game/decorations/well.png");
   }
 
   create() {

@@ -10,15 +10,18 @@ export function createGame(
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent,
-    backgroundColor: "#7ec850",
+    width: parent.clientWidth || window.innerWidth,
+    height: parent.clientHeight || window.innerHeight,
+    backgroundColor: "#5fad45",
     pixelArt: true,
     roundPixels: true,
     antialias: false,
     scale: {
-      mode: Phaser.Scale.FIT,
+      mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
-      width: 480,
-      height: 320,
+      width: parent.clientWidth || window.innerWidth,
+      height: parent.clientHeight || window.innerHeight,
+      expandParent: false,
     },
     physics: {
       default: "arcade",

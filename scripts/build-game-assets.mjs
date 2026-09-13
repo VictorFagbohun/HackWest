@@ -302,6 +302,31 @@ function buildPlayer(dungeon) {
   stamp(bob(back, 0), 3, 3);
 
   writePng(sheet, join(publicGame, "characters", "student.png"));
+
+  // Landing-page variant: recolor only the existing foot pixels so the tiny
+  // shoes follow every pose without changing the sprite silhouette or timing.
+  const shoes = makePng(TILE * 4, TILE * 4);
+  clear(shoes);
+  blit(sheet, 0, 0, TILE * 4, TILE * 4, shoes, 0, 0);
+  const footTones = new Set(["118,59,54", "189,108,74"]);
+
+  for (let frameY = 0; frameY < 4; frameY += 1) {
+    for (let frameX = 0; frameX < 4; frameX += 1) {
+      for (let localY = 14; localY <= 15; localY += 1) {
+        for (let localX = 4; localX <= 11; localX += 1) {
+          const x = frameX * TILE + localX;
+          const y = frameY * TILE + localY;
+          const [r, g, b, a] = get(shoes, x, y);
+          if (a > 0 && footTones.has(`${r},${g},${b}`)) {
+            const color = localY === 15 ? [72, 43, 32] : [112, 68, 42];
+            put(shoes, x, y, ...color, a);
+          }
+        }
+      }
+    }
+  }
+
+  writePng(shoes, join(publicGame, "characters", "student-shoes.png"));
 }
 
 function emptyLayer(name, width, height, data) {

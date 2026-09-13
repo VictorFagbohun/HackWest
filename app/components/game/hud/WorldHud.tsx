@@ -1,8 +1,9 @@
 "use client";
 
-import { CATALOG, type CatalogItem } from "@/types/world";
+import { CATALOG, catalogAssetPath, type CatalogItem } from "@/types/world";
 
 interface WorldHudProps {
+  worldName: string;
   playerName: string;
   coins: number;
   editable: boolean;
@@ -11,9 +12,11 @@ interface WorldHudProps {
   prompt: string | null;
   onToggleBuild: () => void;
   onSelectItem: (item: CatalogItem) => void;
+  onEditableChange?: (editable: boolean) => void;
 }
 
 export function WorldHud({
+  worldName,
   playerName,
   coins,
   editable,
@@ -22,74 +25,136 @@ export function WorldHud({
   prompt,
   onToggleBuild,
   onSelectItem,
+  onEditableChange,
 }: WorldHudProps) {
+  const buildings = CATALOG.filter((item) => item.kind === "building");
+  const decor = CATALOG.filter((item) => item.kind === "decor");
+
   return (
-    <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="rounded border-2 border-amber-800/80 bg-[#1a140fd9] px-3 py-2 text-amber-100 shadow-lg">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-amber-200/70">
-            Explorer
-          </p>
-          <p className="text-lg leading-tight">{playerName}</p>
+    <div className="hud-root">
+      <header className="hud-top">
+        <div className="hud-brand">
+          <span className="hud-brand-mark">Campus Quest</span>
+          <div>
+            <p className="hud-eyebrow">Open World</p>
+            <h1 className="hud-title">{worldName}</h1>
+          </div>
         </div>
-        <div className="rounded border-2 border-yellow-700/80 bg-[#1a140fd9] px-3 py-2 text-yellow-200 shadow-lg">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-yellow-100/70">
-            Coins
-          </p>
-          <p className="text-lg leading-tight">{coins}</p>
+
+        <div className="hud-stats">
+          <div className="hud-chip">
+            <span className="hud-chip-label">Explorer</span>
+            <span className="hud-chip-value">{playerName}</span>
+          </div>
+          <div className="hud-chip hud-chip-coins">
+            <span className="hud-chip-label">Coins</span>
+            <span className="hud-chip-value">{coins.toLocaleString()}</span>
+          </div>
         </div>
+      </header>
+
+      <div className="hud-middle">
+        {prompt ? <div className="hud-prompt">{prompt}</div> : null}
       </div>
 
-      <div className="flex flex-col gap-2">
-        {prompt ? (
-          <div className="mx-auto rounded border-2 border-emerald-800 bg-[#102016e6] px-3 py-2 text-center text-sm text-emerald-100">
-            {prompt}
-          </div>
-        ) : null}
-
-        <div className="flex items-end justify-between gap-3">
-          <p className="text-[11px] text-amber-100/80">
-            Move with WASD / arrows
-            {editable ? " · Build to place · E inspect · Del remove" : " · E inspect"}
+      <footer className="hud-bottom">
+        <div className="hud-controls">
+          <p className="hud-hint">
+            WASD / arrows to walk
+            {editable
+              ? " · Build to place · E inspect · Del remove"
+              : " · E inspect"}
           </p>
-          {editable ? (
-            <button
-              type="button"
-              onClick={onToggleBuild}
-              className="pointer-events-auto rounded border-2 border-amber-700 bg-[#2a1b10] px-3 py-1.5 text-sm text-amber-100 hover:bg-[#3a2616]"
-            >
-              {buildMode ? "Explore" : "Build"}
-            </button>
-          ) : (
-            <span className="rounded border-2 border-stone-600 bg-[#141414cc] px-3 py-1.5 text-sm text-stone-300">
-              Visit only
-            </span>
-          )}
+
+          <div className="hud-actions">
+            {onEditableChange ? (
+              <button
+                type="button"
+                className="hud-btn"
+                onClick={() => onEditableChange(!editable)}
+              >
+                {editable ? "Visit mode" : "Edit world"}
+              </button>
+            ) : null}
+
+            {editable ? (
+              <button
+                type="button"
+                className={`hud-btn hud-btn-primary ${buildMode ? "is-active" : ""}`}
+                onClick={onToggleBuild}
+              >
+                {buildMode ? "Explore" : "Build"}
+              </button>
+            ) : (
+              <span className="hud-lock">Visit only</span>
+            )}
+          </div>
         </div>
 
         {editable && buildMode ? (
-          <div className="pointer-events-auto flex gap-2 overflow-x-auto rounded border-2 border-amber-900 bg-[#1a140fee] p-2">
-            {CATALOG.map((item) => {
-              const selected = selectedCatalogId === item.id;
-              const unaffordable = coins < item.cost;
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => onSelectItem(item)}
-                  className={`min-w-24 rounded border px-2 py-1 text-left text-xs ${
-                    selected
-                      ? "border-yellow-300 bg-amber-900 text-yellow-100"
-                      : "border-amber-950 bg-[#2a1b10] text-amber-100"
-                  } ${unaffordable ? "opacity-40" : ""}`}
-                >
-                  <span className="block font-medium">{item.name}</span>
-                  <span className="text-yellow-200/80">{item.cost}c</span>
-                </button>
-              );
-            })}
+          <div className="hud-catalog">
+            <CatalogRow
+              label="Buildings"
+              items={buildings}
+              coins={coins}
+              selectedCatalogId={selectedCatalogId}
+              onSelectItem={onSelectItem}
+            />
+            <CatalogRow
+              label="Decor"
+              items={decor}
+              coins={coins}
+              selectedCatalogId={selectedCatalogId}
+              onSelectItem={onSelectItem}
+            />
           </div>
         ) : null}
+      </footer>
+    </div>
+  );
+}
+
+function CatalogRow({
+  label,
+  items,
+  coins,
+  selectedCatalogId,
+  onSelectItem,
+}: {
+  label: string;
+  items: CatalogItem[];
+  coins: number;
+  selectedCatalogId: string | null;
+  onSelectItem: (item: CatalogItem) => void;
+}) {
+  return (
+    <div className="hud-catalog-row">
+      <p className="hud-catalog-label">{label}</p>
+      <div className="hud-catalog-scroller">
+        {items.map((item) => {
+          const selected = selectedCatalogId === item.id;
+          const unaffordable = coins < item.cost;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onSelectItem(item)}
+              className={`hud-catalog-item ${selected ? "is-selected" : ""} ${
+                unaffordable ? "is-locked" : ""
+              }`}
+              title={`${item.name} · ${item.cost}c`}
+            >
+              <span className="hud-catalog-thumb">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={catalogAssetPath(item)} alt="" draggable={false} />
+              </span>
+              <span className="hud-catalog-meta">
+                <span className="hud-catalog-name">{item.name}</span>
+                <span className="hud-catalog-cost">{item.cost}c</span>
+              </span>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
