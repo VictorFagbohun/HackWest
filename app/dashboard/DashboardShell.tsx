@@ -2,19 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { PlayerProfile } from "@/types/api";
+import { playerProfile } from "./mockData";
 import { useSocialQuest } from "./SocialQuestProvider";
 
 const navigation = [
   { href: "/dashboard", label: "Home", icon: "⌂" },
   { href: "/dashboard/quests", label: "Quests", icon: "◆" },
   { href: "/dashboard/world", label: "Open World", icon: "◎" },
+  { href: "/dashboard/shop", label: "Shop", icon: "¤" },
   { href: "/dashboard/friends", label: "Friends", icon: "♣" },
   { href: "/dashboard/rankings", label: "Rankings", icon: "▲" },
   { href: "/dashboard/profile", label: "Profile", icon: "●" },
 ];
 
-export function DashboardShell({ player, children }: { player: PlayerProfile; children: React.ReactNode }) {
+export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { coins, xp } = useSocialQuest();
 
@@ -53,8 +54,8 @@ export function DashboardShell({ player, children }: { player: PlayerProfile; ch
         <div className="dashboard-player-card">
           <div className="dashboard-mini-avatar" aria-hidden="true" />
           <div>
-            <strong>{player.name}</strong>
-            <span>Level {player.level}</span>
+            <strong>{playerProfile.name}</strong>
+            <span>Level {playerProfile.level}</span>
           </div>
         </div>
       </aside>
@@ -62,13 +63,13 @@ export function DashboardShell({ player, children }: { player: PlayerProfile; ch
       <div className="dashboard-workspace">
         <header className="dashboard-topbar">
           <div>
-            <span>{player.university}</span>
-            <strong>Welcome back, {player.name}</strong>
+            <span>{playerProfile.university}</span>
+            <strong>Welcome back, {playerProfile.name}</strong>
           </div>
           <div className="dashboard-resources" aria-label="Player resources">
             <span><i className="dashboard-resource-icon dashboard-icon-xp" aria-hidden="true" /> <b>{xp}</b> XP</span>
             <span><i className="dashboard-resource-icon dashboard-icon-coins" aria-hidden="true" /> <b>{coins.toLocaleString()}</b> coins</span>
-            <a href="/auth/logout" style={{ marginLeft: '1rem', padding: '0.5rem 1rem', backgroundColor: '#f0f0f0', borderRadius: '4px', textDecoration: 'none', fontSize: '0.9rem' }}>Sign out</a>
+            <a href="/api/auth/logout" style={{ marginLeft: '1rem', padding: '0.5rem 1rem', backgroundColor: '#f0f0f0', borderRadius: '4px', textDecoration: 'none', fontSize: '0.9rem' }}>Sign out</a>
           </div>
         </header>
         <main className="dashboard-content">{children}</main>
