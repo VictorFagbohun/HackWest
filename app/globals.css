@@ -36,44 +36,104 @@ canvas {
 
 .login-screen {
   box-sizing: border-box;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
-  place-items: center;
   position: fixed;
   inset: 0;
   width: 100vw;
-  gap: clamp(14px, 2.5vh, 28px);
+  height: 100vh;
+  height: 100dvh;
   overflow: hidden;
-  padding: max(18px, env(safe-area-inset-top)) 20px max(6px, env(safe-area-inset-bottom));
-}
-
-.login-screen > header,
-.landing-login-link {
-  position: relative;
-  z-index: 10;
+  background: #178dd8;
+  isolation: isolate;
 }
 
 .landing-login-link {
   position: absolute;
+  z-index: 30;
+  top: 35%;
+  left: 50%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  left: 50%;
-  top: 59%;
-  transform: translate(-50%, -50%);
+  min-width: clamp(170px, 18vw, 260px);
+  min-height: clamp(54px, 7vw, 76px);
+  padding: 10px 24px;
+  border: 4px solid #5b2e12;
+  border-radius: 7px;
+  background: linear-gradient(180deg, #f3bd42 0 12%, #c97823 13% 100%);
+  box-shadow: inset 0 0 0 3px #ffd76e, 0 7px 0 #3a1c0a, 0 12px 24px #18351570;
+  color: #fff6c7;
+  font-size: clamp(1.3rem, 2.4vw, 1.9rem);
+  font-weight: 700;
   text-decoration: none;
+  text-shadow: 2px 2px 0 #6e3514;
+  transform: translate(-50%, -50%);
+  transition: filter 140ms ease, transform 140ms ease, box-shadow 140ms ease;
 }
 
-.login-screen > header {
-  padding: 10px 18px;
+.landing-login-link:hover {
+  filter: brightness(1.08) saturate(1.08);
+  transform: translate(-50%, calc(-50% - 2px));
+  box-shadow: inset 0 0 0 3px #ffe08a, 0 9px 0 #3a1c0a, 0 15px 28px #18351570;
 }
 
-.login-screen > header p {
-  text-shadow: -1px -1px 0 #13261a, 1px -1px 0 #13261a, -1px 1px 0 #13261a, 1px 1px 0 #13261a, 0 4px 10px #000c;
+.landing-login-link:active {
+  transform: translate(-50%, calc(-50% + 5px));
+  box-shadow: inset 0 0 0 3px #ffd76e, 0 2px 0 #3a1c0a;
 }
 
-.login-screen > header h1 {
-  text-shadow: -2px -2px 0 #18281d, 2px -2px 0 #18281d, -2px 2px 0 #18281d, 2px 2px 0 #18281d, 0 5px 0 #243727, 0 9px 18px #000c;
+.landing-login-link:focus-visible {
+  outline: 4px solid #fff6c7;
+  outline-offset: 5px;
+}
+
+.landing-title {
+  position: absolute;
+  z-index: 25;
+  top: max(20px, 3.5vh);
+  left: 50%;
+  width: min(92vw, 720px);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.landing-title p {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 5px 12px;
+  border: 2px solid #173e35;
+  border-radius: 4px;
+  background: #24674bdb;
+  box-shadow: 0 3px 0 #15362d;
+  color: #f8f1c8;
+  font-size: clamp(0.7rem, 1.4vw, 0.9rem);
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-shadow: 1px 1px 0 #173e35;
+  text-transform: uppercase;
+}
+
+.landing-title h1 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0;
+  color: #f3b62d;
+  font-size: clamp(3.6rem, 9vw, 7.8rem);
+  letter-spacing: 0.025em;
+  line-height: 0.72;
+  -webkit-text-stroke: 2px #6a3213;
+  paint-order: stroke fill;
+  text-shadow:
+    0 4px 0 #d4771e,
+    0 8px 0 #743814,
+    4px 11px 0 #38200f,
+    0 16px 24px #123b4770;
+}
+
+.landing-title h1 span:last-child {
+  margin-top: 0.2em;
+  margin-left: 0;
+  font-size: 0.8em;
 }
 
 .auth-screen {
@@ -354,105 +414,286 @@ canvas {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  background-color: #63864b;
-  background-image: radial-gradient(#789858 1px, transparent 1px), radial-gradient(#4f7540 1px, transparent 1px);
-  background-size: 13px 17px, 23px 19px;
-  background-position: 0 0, 7px 9px;
+  background: #168ad5;
   image-rendering: pixelated;
+}
+
+.woodland-sky {
+  position: absolute;
+  z-index: 0;
+  inset: 0 0 42%;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0879cf 0%, #27a8eb 58%, #8bdaf5 100%);
+}
+
+.woodland-sun {
+  position: absolute;
+  top: 8%;
+  right: 10%;
+  width: clamp(52px, 7vw, 92px);
+  aspect-ratio: 1;
+  border: 6px solid #ffd65c;
+  border-radius: 50%;
+  background: #fff3a0;
+  box-shadow: 0 0 0 7px #f5b72d, 0 0 34px #fff1a580;
+}
+
+.woodland-cloud {
+  position: absolute;
+  width: clamp(110px, 14vw, 190px);
+  height: clamp(28px, 4vw, 52px);
+  transform-origin: left top;
+  background: #f6fbff;
+  box-shadow:
+    22px -20px 0 #f6fbff,
+    56px -34px 0 #f6fbff,
+    92px -17px 0 #f6fbff,
+    32px 15px 0 #d8effb,
+    76px 14px 0 #d8effb;
+  opacity: 0.96;
+}
+
+.woodland-cloud::after {
+  content: "";
+  position: absolute;
+  right: -18px;
+  bottom: 0;
+  width: 34px;
+  height: 24px;
+  background: #f6fbff;
+}
+
+.woodland-mountains {
+  position: absolute;
+  left: -3%;
+  width: 106%;
+  clip-path: polygon(0 100%, 0 72%, 9% 38%, 17% 70%, 29% 18%, 39% 63%, 52% 8%, 63% 62%, 74% 30%, 84% 67%, 94% 24%, 100% 52%, 100% 100%);
+}
+
+.woodland-mountains-far {
+  z-index: 1;
+  bottom: 42%;
+  height: 33%;
+  background:
+    linear-gradient(145deg, transparent 0 31%, #9be4c5 32% 38%, transparent 39%) 8% 0 / 32% 100%,
+    linear-gradient(145deg, transparent 0 37%, #83d8b8 38% 44%, transparent 45%) 58% 0 / 32% 100%,
+    #4db995;
+}
+
+.woodland-mountains-near {
+  z-index: 2;
+  bottom: 38%;
+  height: 29%;
+  clip-path: polygon(0 100%, 0 66%, 12% 22%, 22% 68%, 34% 30%, 44% 70%, 58% 16%, 70% 66%, 82% 24%, 92% 62%, 100% 44%, 100% 100%);
+  background:
+    linear-gradient(150deg, transparent 0 35%, #65b779 36% 45%, transparent 46%) 2% 0 / 36% 100%,
+    linear-gradient(150deg, transparent 0 39%, #4e9d69 40% 48%, transparent 49%) 64% 0 / 34% 100%,
+    #2e8057;
+  filter: drop-shadow(0 7px 0 #256949);
+}
+
+.woodland-meadow {
+  position: absolute;
+  z-index: 3;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 49%;
+  border-top: 6px solid #2b7c3c;
+  background-color: #63b83f;
+  background-image:
+    radial-gradient(circle, #9bd154 0 2px, transparent 2.5px),
+    radial-gradient(circle, #3c903c 0 1.5px, transparent 2px),
+    linear-gradient(90deg, transparent 48%, #4fa63a 49% 52%, transparent 53%);
+  background-position: 2px 5px, 18px 12px, 0 0;
+  background-size: 29px 23px, 37px 31px, 41px 37px;
+}
+
+.woodland-fence {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  bottom: 31%;
+  left: 0;
+  height: clamp(54px, 9vh, 84px);
+  border-block: 5px solid #4e2c14;
+  background:
+    linear-gradient(180deg, transparent 17%, #a85e25 18% 33%, #613519 34% 42%, transparent 43% 66%, #a85e25 67% 83%, #613519 84% 91%, transparent 92%),
+    repeating-linear-gradient(90deg, transparent 0 50px, #5b3016 51px 57px, #b86c2d 58px 70px, #6d3c1b 71px 76px, transparent 77px 104px);
+  box-shadow: 0 5px 0 #2f641f66;
 }
 
 .woodland-path {
   position: absolute;
-  inset: 44% -5% 34%;
-  background-color: #c1ad72;
+  z-index: 4;
+  right: -3%;
+  bottom: -2%;
+  left: -3%;
+  height: 32%;
+  border-top: 6px solid #b87a2e;
+  background-color: #dda44e;
   background-image:
-    radial-gradient(circle, #a99561 0 1.5px, transparent 2px),
-    radial-gradient(circle, #d4c387 0 1px, transparent 1.5px),
-    radial-gradient(circle, #b29d67 0 1px, transparent 1.5px);
-  background-position: 5px 8px, 17px 3px, 9px 19px;
-  background-size: 31px 27px, 43px 35px, 53px 41px;
-  border-block: 5px solid #a79860;
-  transform: rotate(-8deg);
-  box-shadow: 0 4px #52763d;
+    radial-gradient(circle, #f3ca72 0 2px, transparent 2.5px),
+    radial-gradient(circle, #b97931 0 1.5px, transparent 2px),
+    linear-gradient(105deg, transparent 0 48%, #cf913e 49% 52%, transparent 53%);
+  background-position: 8px 11px, 23px 19px, 0 0;
+  background-size: 41px 37px, 57px 43px, 71px 61px;
+  clip-path: polygon(0 8%, 9% 4%, 18% 10%, 28% 5%, 39% 11%, 51% 4%, 62% 9%, 74% 3%, 87% 10%, 100% 5%, 100% 100%, 0 100%);
+  box-shadow: inset 0 8px 0 #efbc61;
 }
 
-.woodland-tree, .woodland-flowers {
+.woodland-tree {
   position: absolute;
-  width: clamp(48px, 8vw, 108px);
-  height: clamp(80px, 20vh, 145px);
-  background: url('/game/decorations/tree-pine.png') center / contain no-repeat;
-  filter: drop-shadow(3px 5px 0 #233e3438);
+  z-index: 6;
+  height: auto;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: saturate(1.14) drop-shadow(7px 9px 0 #23572d80);
 }
 
 .woodland-tree-dark {
-  filter: brightness(0.68) saturate(1.12) drop-shadow(3px 5px 0 #1c302838);
+  filter: brightness(0.72) saturate(1.25) drop-shadow(7px 9px 0 #194b2980);
 }
 
-.woodland-flowers {
-  width: 6%;
-  height: 8%;
-  background-image: url('/game/decorations/flowers.png');
-}
-
-.woodland-bush,
-.woodland-rock {
+.woodland-campus-hall {
   position: absolute;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-  filter: drop-shadow(2px 3px 0 #233e3438);
+  z-index: 8;
+  left: 50%;
+  bottom: 20%;
+  width: clamp(230px, 31vw, 430px);
+  transform: translateX(-50%);
+  filter: drop-shadow(10px 14px 0 #51321e70);
 }
 
-.woodland-bush {
-  width: clamp(36px, 5vw, 54px);
-  height: clamp(36px, 5vw, 54px);
-  background-image: url('/game/decorations/bush.png');
-  background-position: center bottom;
-  background-size: contain;
+.woodland-campus-hall img {
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
 }
 
-.woodland-bush-dark {
-  filter: brightness(0.68) saturate(1.12) drop-shadow(2px 3px 0 #1c302838);
-}
-
-.woodland-rock {
-  width: clamp(12px, 3.5%, 22px);
-  aspect-ratio: 4 / 3;
-  background: linear-gradient(135deg, #747b78 0 24%, #505754 25% 68%, #303634 69%);
-  clip-path: polygon(23% 0, 76% 0, 100% 36%, 88% 100%, 10% 100%, 0 42%);
-  box-shadow: inset -3px -3px 0 #242a28;
+.woodland-decoration {
+  position: absolute;
+  z-index: 7;
+  height: auto;
+  object-fit: contain;
+  image-rendering: pixelated;
+  filter: saturate(1.2) drop-shadow(4px 5px 0 #28512766);
 }
 
 .woodland-walker {
   position: absolute;
-  left: 28%;
-  top: 43%;
-  width: 80px;
-  height: 80px;
-  animation: woodland-wander 12s linear infinite;
+  z-index: 11;
+  left: 8%;
+  bottom: 7%;
+  width: 96px;
+  height: 96px;
+  animation: woodland-wander 16s ease-in-out infinite;
 }
 
 .woodland-character {
   display: block;
-  width: 80px;
-  height: 80px;
-  background: url('/game/characters/student-shoes.png') 0 -160px / 320px 320px;
-  filter: drop-shadow(0 3px 0 #233e3455);
-  animation: woodland-steps 0.6s steps(4) infinite, woodland-facing 12s step-end infinite;
+  width: 96px;
+  height: 96px;
+  background: url('/game/characters/student-shoes.png') 0 -192px / 384px 384px;
+  filter: drop-shadow(0 5px 0 #533a2166);
+  animation: woodland-steps 0.58s steps(4) infinite, woodland-facing 16s step-end infinite;
+}
+
+.woodland-foreground {
+  position: absolute;
+  z-index: 10;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 22px;
+  border-top: 5px solid #337f37;
+  background: repeating-linear-gradient(100deg, #22652f 0 7px, #3d923d 8px 14px, #276e34 15px 20px);
+  clip-path: polygon(0 45%, 2% 4%, 4% 54%, 6% 14%, 8% 52%, 10% 0, 12% 50%, 14% 17%, 16% 48%, 18% 6%, 20% 55%, 22% 12%, 24% 48%, 26% 0, 28% 54%, 30% 16%, 32% 47%, 34% 6%, 36% 51%, 38% 12%, 40% 55%, 42% 1%, 44% 51%, 46% 16%, 48% 49%, 50% 4%, 52% 52%, 54% 13%, 56% 48%, 58% 1%, 60% 52%, 62% 14%, 64% 49%, 66% 3%, 68% 55%, 70% 16%, 72% 48%, 74% 2%, 76% 53%, 78% 15%, 80% 49%, 82% 1%, 84% 54%, 86% 12%, 88% 50%, 90% 3%, 92% 55%, 94% 14%, 96% 47%, 98% 3%, 100% 48%, 100% 100%, 0 100%);
 }
 
 @keyframes woodland-wander {
-  0%, 100% { left: 14%; top: 45%; }
-  50% { left: 78%; top: 36%; }
+  0%, 100% { left: 7%; }
+  50% { left: 63%; }
 }
 
 @keyframes woodland-steps {
-  to { background-position-x: -320px; }
+  to { background-position-x: -384px; }
 }
 
 @keyframes woodland-facing {
-  0% { background-position-y: -160px; }
-  50% { background-position-y: -80px; }
+  0%, 49% { background-position-y: -192px; }
+  50%, 100% { background-position-y: -96px; }
+}
+
+@media (max-width: 760px) {
+  .landing-title {
+    top: max(18px, 2.5vh);
+  }
+
+  .landing-title h1 {
+    font-size: clamp(3rem, 15vw, 5.2rem);
+  }
+
+  .woodland-campus-hall {
+    bottom: 27%;
+    width: clamp(210px, 52vw, 300px);
+  }
+
+  .woodland-fence {
+    bottom: 34%;
+  }
+
+  .woodland-path {
+    height: 35%;
+  }
+
+  .woodland-tree:nth-of-type(2),
+  .woodland-tree:nth-of-type(3) {
+    display: none;
+  }
+
+  .woodland-decoration {
+    max-width: 44px;
+  }
+
+  .woodland-walker {
+    bottom: 15%;
+    width: 80px;
+    height: 80px;
+  }
+
+  .woodland-character {
+    width: 80px;
+    height: 80px;
+    background-position-y: -160px;
+    background-size: 320px 320px;
+    animation: woodland-steps-mobile 0.58s steps(4) infinite, woodland-facing-mobile 16s step-end infinite;
+  }
+
+  @keyframes woodland-wander {
+    0%, 100% { left: 3%; }
+    50% { left: 67%; }
+  }
+
+  @keyframes woodland-steps-mobile {
+    to { background-position-x: -320px; }
+  }
+
+  @keyframes woodland-facing-mobile {
+    0%, 49% { background-position-y: -160px; }
+    50%, 100% { background-position-y: -80px; }
+  }
+}
+
+@media (max-height: 680px) and (min-width: 761px) {
+  .landing-title h1 {
+    font-size: clamp(3.2rem, 8vw, 5.6rem);
+  }
+
+  .woodland-campus-hall {
+    width: clamp(210px, 28vw, 320px);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
