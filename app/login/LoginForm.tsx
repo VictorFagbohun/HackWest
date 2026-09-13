@@ -1,13 +1,15 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function LoginForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    window.location.href = "/api/auth/login";
+    router.push("/api/auth/login");
   }
 
   return (
@@ -33,7 +35,7 @@ export function LoginForm() {
           <button
             className="auth-text-button"
             type="button"
-            onClick={() => window.location.href = "/api/auth/login?connection=email&prompt=login"}
+            onClick={() => router.push("/api/auth/login?connection=email&prompt=login")}
           >
             Forgot password?
           </button>
@@ -73,7 +75,7 @@ export function LoginForm() {
         <button
           className="auth-text-button"
           type="button"
-          onClick={() => window.location.href = "/api/auth/signup"}
+          onClick={() => router.push("/api/auth/signup")}
         >
           Create an account
         </button>
