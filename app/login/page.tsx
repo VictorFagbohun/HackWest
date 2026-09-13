@@ -1,14 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { authConfigured, getAuth0 } from "@/lib/auth0";
 import { WoodlandScene } from "@/app/components/WoodlandScene";
-import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = {
   title: "Log in | Campus Quest",
   description: "Log in to continue your Campus Quest adventure.",
 };
 
-export default function LoginPage() {
+export const dynamic = "force-dynamic";
+
+export default async function LoginPage() {
+  const configured = authConfigured();
+  const session = configured ? await getAuth0().getSession() : null;
+
+  if (session?.user?.sub) {
+    redirect("/dashboard");
+  }
+
   return (
     <main className="auth-screen">
       <WoodlandScene />
@@ -22,7 +32,15 @@ export default function LoginPage() {
           <h1 id="login-heading">Welcome back</h1>
           <span>Continue your campus adventure.</span>
         </header>
-        <LoginForm />
+        {configured ? (
+          <Link className="auth-submit auth-submit-link" href="/auth/login">
+            Continue with Auth0
+          </Link>
+        ) : (
+          <p className="auth-message" role="status">
+            Sign-in is being set up.
+          </p>
+        )}
       </section>
     </main>
   );
