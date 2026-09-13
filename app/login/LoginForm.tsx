@@ -6,11 +6,10 @@ import { useRouter } from "next/navigation";
 export function LoginForm() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [message, setMessage] = useState("");
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    router.push("/dashboard");
+    router.push("/api/auth/login");
   }
 
   return (
@@ -36,7 +35,7 @@ export function LoginForm() {
           <button
             className="auth-text-button"
             type="button"
-            onClick={() => setMessage("Password recovery will be connected with authentication.")}
+            onClick={() => router.push("/api/auth/login")}
           >
             Forgot password?
           </button>
@@ -69,9 +68,6 @@ export function LoginForm() {
         <button className="auth-submit" type="submit">
           Log in
         </button>
-        <p className="auth-message" role="status" aria-live="polite">
-          {message}
-        </p>
       </form>
 
       <p className="auth-signup">
@@ -79,7 +75,7 @@ export function LoginForm() {
         <button
           className="auth-text-button"
           type="button"
-          onClick={() => setMessage("Account creation will be connected with authentication.")}
+          onClick={() => router.push("/api/auth/signup")}
         >
           Create an account
         </button>
