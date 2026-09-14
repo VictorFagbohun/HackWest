@@ -1,78 +1,37 @@
 import Link from "next/link";
-import { playerProfile } from "./mockData";
+import { HomeLobbyScene } from "@/app/components/HomeLobbyScene";
+import { requirePlayer } from "@/lib/auth";
+import { HomeEntrance } from "./HomeEntrance";
 
-export default function DashboardHomePage() {
+export default async function DashboardHomePage() {
+  const playerProfile = await requirePlayer();
+
   return (
-    <div className="dashboard-home-menu">
-      <section className="dashboard-character-stage" aria-labelledby="home-character-name">
-        <div className="dashboard-day-sky" aria-hidden="true">
-          <span className="dashboard-day-sun" />
-          <span className="dashboard-day-cloud dashboard-day-cloud-one" />
-          <span className="dashboard-day-cloud dashboard-day-cloud-two" />
-          <span className="dashboard-day-hills dashboard-day-hills-far" />
-          <span className="dashboard-day-hills dashboard-day-hills-near" />
-          <span className="dashboard-sky-bird dashboard-sky-bird-one" />
-          <span className="dashboard-sky-bird dashboard-sky-bird-two" />
-          <span className="dashboard-sky-bird dashboard-sky-bird-three" />
-        </div>
+    <HomeEntrance playerName={playerProfile.name}>
+      <HomeLobbyScene playerName={playerProfile.name} />
 
-        <div className="dashboard-hero-identity">
+      <div className="dashboard-home-panels">
+        <section className="dashboard-panel home-player-panel">
           <span>Campus explorer</span>
-          <h1 id="home-character-name">{playerProfile.name}</h1>
-          <div>
-            <b>Level {playerProfile.level}</b>
-            <Link href="/dashboard/profile">View profile</Link>
-          </div>
-        </div>
+          <h2>{playerProfile.name}</h2>
+          <p>Level {playerProfile.level}</p>
+          <Link href="/dashboard/profile">View Profile</Link>
+        </section>
 
-        {/* These decorations come from the Phaser asset pack. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="dashboard-stage-tree dashboard-stage-tree-left" src="/game/decorations/tree-pine.png" alt="" aria-hidden="true" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="dashboard-stage-tree dashboard-stage-tree-middle" src="/game/decorations/tree-pine.png" alt="" aria-hidden="true" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="dashboard-stage-tree dashboard-stage-tree-right" src="/game/decorations/tree-pine.png" alt="" aria-hidden="true" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="dashboard-stage-flowers dashboard-stage-flowers-left" src="/game/decorations/flowers.png" alt="" aria-hidden="true" />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="dashboard-stage-flowers dashboard-stage-flowers-right" src="/game/decorations/grass-flower.png" alt="" aria-hidden="true" />
-
-        <div className="dashboard-hero-character" role="img" aria-label={`${playerProfile.name}'s game character`}>
-          <span className="dashboard-hero-character-shadow" aria-hidden="true" />
-          <span className="dashboard-hero-character-sprite" aria-hidden="true" />
-        </div>
-
-        <p className="dashboard-stage-message">Ready for your next campus adventure?</p>
-      </section>
-
-      <section className="dashboard-home-journal" aria-labelledby="home-journal-title">
-        <header className="dashboard-journal-heading">
-          <span>Home base</span>
-          <h2 id="home-journal-title">Welcome back</h2>
-          <p>Your campus adventure is ready whenever you are.</p>
-        </header>
-
-        <div className="dashboard-home-actions">
-          <article className="dashboard-home-streak">
-            <span>Current streak</span>
-            <strong>4 days</strong>
-            <p>Complete one quest today to keep it going.</p>
-          </article>
-
-          <Link className="dashboard-enter-world" href="/dashboard/world">
-            <span>
-              <small>Continue exploring</small>
-              Enter Open World
-            </span>
-            <b aria-hidden="true">→</b>
+        <section className="dashboard-panel home-action-panel">
+          <span>Welcome back</span>
+          <h2>Ready to explore?</h2>
+          <p className="home-streak">
+            Current streak <strong>4 days</strong>
+          </p>
+          <Link className="dashboard-primary-action" href="/dashboard/world">
+            Enter Open World <span aria-hidden="true">→</span>
           </Link>
-        </div>
-
-        <div className="dashboard-home-tip">
-          <span>Explorer note</span>
-          <p>Step into the open world to visit campus landmarks and meet other players.</p>
-        </div>
-      </section>
-    </div>
+          <p className="home-explorer-note">
+            Take a walk through campus, visit friends, and keep your streak alive.
+          </p>
+        </section>
+      </div>
+    </HomeEntrance>
   );
 }

@@ -7,5 +7,5 @@ export function authConfigured() {
 }
 export function getAuth0() {
   if (!authConfigured()) throw new AppError(503,'AUTH_NOT_CONFIGURED','Sign-in is not configured yet.');
-  return client ??= new Auth0Client();
+  return client ??= new Auth0Client({ signInReturnToPath: '/dashboard?welcome=1' });
 }

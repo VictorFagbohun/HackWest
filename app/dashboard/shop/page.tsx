@@ -8,49 +8,14 @@ import {
   type CSSProperties,
 } from "react";
 import { useSocialQuest } from "../SocialQuestProvider";
-import { playerProfile } from "../mockData";
-
-type ShopCategory = "SHIRT" | "HAT" | "SHOES" | "ACCESSORY";
-
-interface ShopItem {
-  id: string;
-  name: string;
-  category: ShopCategory;
-  price: number;
-  description: string;
-  color: string;
-  shade: string;
-}
-
-const SHOP_ITEMS: ShopItem[] = [
-  { id: "maroon-shirt", name: "Campus Maroon", category: "SHIRT", price: 120, description: "A classic campus tee.", color: "#9f3652", shade: "#6d2238" },
-  { id: "forest-shirt", name: "Forest Green", category: "SHIRT", price: 150, description: "Made for woodland quests.", color: "#4f824f", shade: "#315b38" },
-  { id: "sky-shirt", name: "Sky Blue", category: "SHIRT", price: 150, description: "Bright as a clear campus day.", color: "#5c9fc4", shade: "#397396" },
-  { id: "trail-cap", name: "Trail Cap", category: "HAT", price: 180, description: "Shade for long adventures.", color: "#bd7440", shade: "#7b4329" },
-  { id: "knit-beanie", name: "Quest Beanie", category: "HAT", price: 220, description: "Cozy gear for late study runs.", color: "#6e4f92", shade: "#493568" },
-  { id: "campus-runners", name: "Campus Runners", category: "SHOES", price: 140, description: "Reliable everyday shoes.", color: "#76503a", shade: "#4c3026" },
-  { id: "gold-sneakers", name: "Gold Sneakers", category: "SHOES", price: 190, description: "A little shine for every step.", color: "#d49a39", shade: "#8f6227" },
-  { id: "forest-sneakers", name: "Forest Sneakers", category: "SHOES", price: 190, description: "Earthy and ready to explore.", color: "#55724a", shade: "#354c32" },
-  { id: "round-glasses", name: "Round Glasses", category: "ACCESSORY", price: 160, description: "A scholarly finishing touch.", color: "#d4ad52", shade: "#765324" },
-  { id: "campus-pin", name: "Campus Pin", category: "ACCESSORY", price: 90, description: "Wear your campus pride.", color: "#f0c958", shade: "#a56e28" },
-];
-
-const FILTERS: Array<{ label: string; value: "ALL" | ShopCategory }> = [
-  { label: "All items", value: "ALL" },
-  { label: "Shirts", value: "SHIRT" },
-  { label: "Hats", value: "HAT" },
-  { label: "Shoes", value: "SHOES" },
-  { label: "Accessories", value: "ACCESSORY" },
-];
-
-const CATEGORY_LABELS: Record<ShopCategory, string> = {
-  SHIRT: "Shirt",
-  HAT: "Hat",
-  SHOES: "Shoes",
-  ACCESSORY: "Accessory",
-};
-
-type EquippedItems = Record<ShopCategory, string | null>;
+import {
+  CATEGORY_LABELS,
+  SHOP_FILTERS,
+  SHOP_ITEMS,
+  type EquippedItems,
+  type ShopCategory,
+  type ShopItem,
+} from "@/lib/shop-catalog";
 
 function sameColor(data: Uint8ClampedArray, index: number, color: [number, number, number]) {
   return data[index] === color[0] && data[index + 1] === color[1] && data[index + 2] === color[2];
@@ -70,7 +35,7 @@ function paintPixels(
   pixels.forEach(([x, y, width, height]) => context.fillRect(x, y, width, height));
 }
 
-function CharacterPreview({ equipped }: { equipped: EquippedItems }) {
+function CharacterPreview({ equipped, playerName }: { equipped: EquippedItems; playerName: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -132,7 +97,7 @@ function CharacterPreview({ equipped }: { equipped: EquippedItems }) {
       width="16"
       height="16"
       role="img"
-      aria-label={`${playerProfile.name}'s character preview`}
+      aria-label={`${playerName}'s character preview`}
     />
   );
 }
@@ -144,31 +109,64 @@ function ItemArt({ item }: { item: ShopItem }) {
   } as CSSProperties;
 
   return (
-    <span className={`shop-item-art shop-item-art-${item.category.toLowerCase()} shop-item-${item.id}`} style={style} aria-hidden="true">
+    <span
+      className={`shop-item-art shop-item-art-${item.category.toLowerCase()} shop-item-${item.id}`}
+      style={style}
+      aria-hidden="true"
+    >
       <i />
     </span>
   );
 }
 
 export default function ShopPage() {
-  const { coins, setCoins } = useSocialQuest();
+  const { coins, player, setCoins, outfit, setOutfit } = useSocialQuest();
   const [filter, setFilter] = useState<"ALL" | ShopCategory>("ALL");
-  const [owned, setOwned] = useState(() => new Set(["maroon-shirt", "campus-runners"]));
-  const [equipped, setEquipped] = useState<EquippedItems>({
-    SHIRT: "maroon-shirt",
-    HAT: null,
-    SHOES: "campus-runners",
-    ACCESSORY: null,
-  });
+  const [previewItem, setPreviewItem] = useState<ShopItem | null>(null);
   const [notice, setNotice] = useState("Select an item to preview it on your character.");
 
+  const owned = useMemo(() => new Set(outfit.ownedItemIds), [outfit.ownedItemIds]);
+  const equipped = outfit.equipped;
+
+  const previewLook = useMemo<EquippedItems>(() => {
+    if (!previewItem) return equipped;
+    return {
+      ...equipped,
+      [previewItem.category]: previewItem.id,
+    };
+  }, [equipped, previewItem]);
+
   const visibleItems = useMemo(
-    () => filter === "ALL" ? SHOP_ITEMS : SHOP_ITEMS.filter((item) => item.category === filter),
+    () => (filter === "ALL" ? SHOP_ITEMS : SHOP_ITEMS.filter((item) => item.category === filter)),
     [filter],
   );
 
+  const previewItemOnCharacter = (item: ShopItem) => {
+    setPreviewItem(item);
+    const alreadyEquipped = equipped[item.category] === item.id;
+    setNotice(
+      alreadyEquipped
+        ? `${item.name} is already equipped.`
+        : owned.has(item.id)
+          ? `Previewing ${item.name}. Click Equip to wear it.`
+          : `Previewing ${item.name}. Click Buy to purchase it.`,
+    );
+  };
+
+  // Local prototype helpers — swap for official purchase/equip API calls later.
   const equipItem = (item: ShopItem) => {
-    setEquipped((current) => ({ ...current, [item.category]: item.id }));
+    if (!owned.has(item.id)) {
+      setNotice(`You do not own ${item.name} yet.`);
+      return;
+    }
+    setOutfit({
+      ...outfit,
+      equipped: {
+        ...outfit.equipped,
+        [item.category]: item.id,
+      },
+    });
+    setPreviewItem(item);
     setNotice(`${item.name} equipped.`);
   };
 
@@ -179,13 +177,20 @@ export default function ShopPage() {
     }
 
     if (coins < item.price) {
+      setPreviewItem(item);
       setNotice(`You need ${item.price - coins} more coins for ${item.name}.`);
       return;
     }
 
     setCoins(coins - item.price);
-    setOwned((current) => new Set(current).add(item.id));
-    setEquipped((current) => ({ ...current, [item.category]: item.id }));
+    setOutfit({
+      ownedItemIds: [...outfit.ownedItemIds, item.id],
+      equipped: {
+        ...outfit.equipped,
+        [item.category]: item.id,
+      },
+    });
+    setPreviewItem(item);
     setNotice(`${item.name} purchased and equipped!`);
   };
 
@@ -199,7 +204,10 @@ export default function ShopPage() {
         </div>
         <div className="shop-balance" aria-label={`${coins} coins available`}>
           <i className="dashboard-resource-icon dashboard-icon-coins" aria-hidden="true" />
-          <span><small>Your balance</small><strong>{coins.toLocaleString()} coins</strong></span>
+          <span>
+            <small>Your balance</small>
+            <strong>{coins.toLocaleString()} coins</strong>
+          </span>
         </div>
       </section>
 
@@ -207,20 +215,23 @@ export default function ShopPage() {
         <aside className="shop-preview-panel" aria-label="Character preview">
           <div className="shop-preview-heading">
             <span>Fitting room</span>
-            <h2>{playerProfile.name}</h2>
+            <h2>{player.name}</h2>
           </div>
           <div className="shop-character-stage">
             <span className="shop-preview-spark shop-preview-spark-one" aria-hidden="true">✦</span>
             <span className="shop-preview-spark shop-preview-spark-two" aria-hidden="true">✦</span>
-            <CharacterPreview equipped={equipped} />
+            <CharacterPreview equipped={previewLook} playerName={player.name} />
             <span className="shop-character-shadow" aria-hidden="true" />
           </div>
           <div className="shop-equipped-list">
             {(Object.keys(CATEGORY_LABELS) as ShopCategory[]).map((category) => {
-              const item = SHOP_ITEMS.find((entry) => entry.id === equipped[category]);
+              const item = SHOP_ITEMS.find((entry) => entry.id === previewLook[category]);
+              const isPreviewing =
+                previewItem?.category === category &&
+                previewItem.id !== equipped[category];
               return (
                 <div key={category}>
-                  <span>{CATEGORY_LABELS[category]}</span>
+                  <span>{CATEGORY_LABELS[category]}{isPreviewing ? " · Preview" : ""}</span>
                   <strong>{item?.name ?? "None"}</strong>
                 </div>
               );
@@ -229,7 +240,7 @@ export default function ShopPage() {
           <p className="shop-notice" aria-live="polite">{notice}</p>
         </aside>
 
-        <section className="shop-catalog" aria-labelledby="shop-catalog-title">
+        <section className="shop-catalog" aria-labelledby="shop-catalog-title" data-tutorial-id="shop-catalog">
           <div className="shop-catalog-heading">
             <div>
               <span>Simple styles</span>
@@ -239,7 +250,7 @@ export default function ShopPage() {
           </div>
 
           <div className="shop-filters" aria-label="Filter shop items">
-            {FILTERS.map((category) => (
+            {SHOP_FILTERS.map((category) => (
               <button
                 key={category.value}
                 type="button"
@@ -255,8 +266,27 @@ export default function ShopPage() {
             {visibleItems.map((item) => {
               const isOwned = owned.has(item.id);
               const isEquipped = equipped[item.category] === item.id;
+              const isPreviewing = previewItem?.id === item.id;
               return (
-                <article className={`shop-item-card ${isEquipped ? "shop-item-card-equipped" : ""}`} key={item.id}>
+                <article
+                  className={[
+                    "shop-item-card",
+                    isEquipped ? "shop-item-card-equipped" : "",
+                    isPreviewing ? "shop-item-card-preview" : "",
+                  ].filter(Boolean).join(" ")}
+                  key={item.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isPreviewing}
+                  aria-label={`Preview ${item.name}`}
+                  onClick={() => previewItemOnCharacter(item)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      previewItemOnCharacter(item);
+                    }
+                  }}
+                >
                   <ItemArt item={item} />
                   <div className="shop-item-copy">
                     <span>{CATEGORY_LABELS[item.category]}</span>
@@ -264,8 +294,18 @@ export default function ShopPage() {
                     <p>{item.description}</p>
                   </div>
                   <div className="shop-item-footer">
-                    <strong><i className="dashboard-resource-icon dashboard-icon-coins" aria-hidden="true" /> {item.price}</strong>
-                    <button type="button" disabled={isEquipped} onClick={() => buyItem(item)}>
+                    <strong>
+                      <i className="dashboard-resource-icon dashboard-icon-coins" aria-hidden="true" />{" "}
+                      {item.price}
+                    </strong>
+                    <button
+                      type="button"
+                      disabled={isEquipped}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        buyItem(item);
+                      }}
+                    >
                       {isEquipped ? "Equipped" : isOwned ? "Equip" : "Buy"}
                     </button>
                   </div>

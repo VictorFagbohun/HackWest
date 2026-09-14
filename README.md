@@ -26,11 +26,15 @@ Register `http://localhost:3000/auth/callback` in Allowed Callback URLs, and `ht
 
 Link sign-in to `/auth/login` and sign-out to `/auth/logout`. After sign-in call `getMe()` from `lib/api.ts`: it creates/loads the UUID player using the verified Auth0 subject and grants an unplaced starter house. Pass `me.id` to the other components. University selection is self-reported for the demo, not verification of enrollment or eRaider affiliation. `updatePlayerProfile` saves name, university, major and character.
 
-### Gemini
+### Gemini + GPS
 
-Set `GEMINI_API_KEY`; optionally set `GEMINI_MODEL` (default `gemini-3.5-flash`). The key is used only on the server. The seed `Workout Evidence` quest requires a server-timed hour before accepting a photo. For a short live demo, deliberately configure that quest's `minimum_duration_seconds` to a shorter value and explain the demo setting; the API cannot override it.
+Set `GEMINI_API_KEY`; optionally set `GEMINI_MODEL` (default `gemini-3.5-flash`). The key is used only on the server. Campus quests complete with **device GPS near the campus pin** plus a photo Gemini can match to that place — no QR codes. The seed `Workout Evidence` quest also requires a server-timed hour before accepting a photo. For a short live demo, lower that quest's `minimum_duration_seconds` in the DB and explain the demo setting; the API cannot override it. Off-campus local testing only: set `GEO_CHECK_DISABLED=true`.
 
-Supported photos are JPEG, PNG, WebP, at most 3 MB, sent as raw base64 (without a data-URL prefix). Images are passed to Gemini and are not stored by this app. The database retains a SHA-256 hash, verification result, and attempt metadata. Provider data handling is separate from this app's storage. Exact photo reuse by one player is blocked; edited images are not reliably detected. A photo supports scene relevance, not proof of identity or elapsed activity. [Gemini structured output](https://ai.google.dev/gemini-api/docs/structured-output).
+### Open-world tutorial
+
+Set `NEXT_PUBLIC_TUTORIAL_ENABLED=true` to show the first-visit walkthrough starting in `/dashboard/world` (move, build, place, inspect), then Quests, Shop, Friends (visit Victor), Rankings, and Profile. Targets glow with a “Click …” cue; Build scales up so it is hard to miss. Progress is stored in `sessionStorage` / completion in `localStorage`; force a replay with the **Replay tutorial** button in the dashboard top bar or with `?tutorial=1` (middleware carries that flag through Auth0 login in a short-lived cookie). Voice is off by default — later toggle `NEXT_PUBLIC_TUTORIAL_VOICE` plus server-only `ELEVENLABS_API_KEY` / `ELEVENLABS_VOICE_ID` (static script lines in `lib/tutorial.ts`).
+
+Supported photos are JPEG, PNG, WebP, at most 3 MB, sent as raw base64 (without a data-URL prefix) together with `{ latitude, longitude, accuracyMeters? }`. Images are passed to Gemini and are not stored by this app. The database retains a SHA-256 hash, verification result, and attempt metadata. Exact photo reuse by one player is blocked; edited images are not reliably detected. A photo supports scene relevance, not proof of identity or elapsed activity. GPS must fall within the configured campus radius with accuracy ≤120m. [Gemini structured output](https://ai.google.dev/gemini-api/docs/structured-output).
 
 Provider outages return a retryable 503 with no rewards. A rejected attempt is terminal; start a new attempt with new evidence. Ten verifier calls per player per hour and thirty new attempts per hour limit demo usage. Expired verification leases can be retried after 90 seconds. Limits are stored in PostgreSQL and work across app instances.
 
@@ -45,8 +49,10 @@ For the existing, reviewed Claude schema only, the initial adoption command is `
 - `001_core.sql`: original six-table schema and canonical seeds, with an imported stray character corrected.
 - `002_integrity.sql`: auth mapping, balance checks, attempts, period claims, placement/friend constraints, timestamp triggers, photo quest.
 - `003_quest_hypertable.sql`: converts the event log to a TimescaleDB hypertable with a composite `(id, completed_at)` primary key. Duplicate reward enforcement lives in the regular `quest_claims` table.
+- `004_photo_geofence.sql`: attaches `Workout Evidence` to `REC_CENTER` so GPS and Gemini both target the Rec Center.
+- `005_photo_location_only.sql`: converts seeded campus quests from QR to GPS + photo (`PHOTO_AI`).
 
-Daily periods reset at midnight America/Chicago. Weekly leaderboard periods start Monday at midnight in that timezone. XP is cumulative; level n starts at `50*n*(n-1)` XP. Each successful quest increments its category stat by one. Coins are spendable and never affect rank. Repeatable QR quests require an explicit attempt ID; retrying the same attempt returns its original receipt. Receipts contain balances at the original completion; refresh `getMe()` for the current balance after later actions.
+Daily periods reset at midnight America/Chicago. Weekly leaderboard periods start Monday at midnight in that timezone. XP is cumulative; level n starts at `50*n*(n-1)` XP. Each successful quest increments its category stat by one. Coins are spendable and never affect rank. Repeatable photo quests require an explicit attempt; retrying a completed attempt returns its original receipt. Receipts contain balances at the original completion; refresh `getMe()` for the current balance after later actions.
 
 ### TLS
 

@@ -1,7 +1,15 @@
 import { db, transaction } from './db';
 import { invariant } from './errors';
-import { gridSize, Placements } from './game-rules';
-import type { PlayerProfile, World, OwnedItem, PurchaseResult, LeaderboardEntry, PlayerSearchResult } from '../types/api';
+import { gridSize, Placements, levelForXp } from './game-rules';
+import {
+  readCampusProgress,
+  socialQuestById,
+  writeCampusProgress,
+  type CampusProgress,
+} from './campus-progress';
+import type { CharacterOutfit } from './shop-catalog';
+import type { PlayerProfile, World, OwnedItem, PurchaseResult, LeaderboardEntry, PlayerSearchResult, CampusProgressResult } from '../types/api';
+import type { WorldData } from '../types/world';
 
 const profileColumns = 'id, name, university, major, level, xp, coins, character, stats';
 export async function getPlayerProfile(userId: string): Promise<PlayerProfile> {
@@ -21,6 +29,72 @@ export async function updateProfile(userId: string, input: { name: string; unive
   const { rows } = await db().query(`UPDATE users SET name=$2, university=$3, major=$4, character=$5 WHERE id=$1 RETURNING ${profileColumns}`,
     [userId, input.name, input.university, input.major, input.character]);
   return rows[0] as PlayerProfile;
+}
+
+function toCampusResult(user: PlayerProfile, progress: CampusProgress): CampusProgressResult {
+  return {
+    coins: user.coins,
+    xp: user.xp,
+    level: user.level,
+    claimedQuestIds: progress.claimedQuestIds,
+    visitedFriendIds: progress.visitedFriendIds,
+    homeWorld: progress.homeWorld,
+    outfit: progress.outfit,
+  };
+}
+
+export async function getCampusProgress(userId: string): Promise<CampusProgressResult> {
+  const user = await getPlayerProfile(userId);
+  return toCampusResult(user, readCampusProgress(user.character));
+}
+
+export async function saveCampusProgress(
+  userId: string,
+  input: { coins: number; visitedFriendIds: string[]; homeWorld: WorldData; outfit: CharacterOutfit },
+): Promise<CampusProgressResult> {
+  return transaction(async client => {
+    const user = (await client.query(`SELECT ${profileColumns} FROM users WHERE id=$1 FOR UPDATE`, [userId])).rows[0] as PlayerProfile | undefined;
+    invariant(user, 404, 'PLAYER_NOT_FOUND', 'Player not found.');
+    const current = readCampusProgress(user.character);
+    const next: CampusProgress = {
+      claimedQuestIds: current.claimedQuestIds,
+      visitedFriendIds: [...new Set(input.visitedFriendIds)],
+      homeWorld: input.homeWorld,
+      outfit: input.outfit,
+    };
+    const character = writeCampusProgress(user.character, next);
+    const { rows } = await client.query(
+      `UPDATE users SET coins=$2, character=$3 WHERE id=$1 RETURNING ${profileColumns}`,
+      [userId, input.coins, character],
+    );
+    return toCampusResult(rows[0] as PlayerProfile, next);
+  });
+}
+
+export async function claimSocialQuest(userId: string, questId: string): Promise<CampusProgressResult> {
+  const quest = socialQuestById(questId);
+  invariant(quest, 404, 'QUEST_NOT_FOUND', 'Social quest not found.');
+  return transaction(async client => {
+    const user = (await client.query(`SELECT ${profileColumns} FROM users WHERE id=$1 FOR UPDATE`, [userId])).rows[0] as PlayerProfile | undefined;
+    invariant(user, 404, 'PLAYER_NOT_FOUND', 'Player not found.');
+    const progress = readCampusProgress(user.character);
+    if (progress.claimedQuestIds.includes(questId)) {
+      return toCampusResult(user, progress);
+    }
+    const next: CampusProgress = {
+      ...progress,
+      claimedQuestIds: [...progress.claimedQuestIds, questId],
+    };
+    const xp = user.xp + quest.rewardXp;
+    const coins = user.coins + quest.rewardCoins;
+    const level = levelForXp(xp);
+    const character = writeCampusProgress(user.character, next);
+    const { rows } = await client.query(
+      `UPDATE users SET xp=$2, coins=$3, level=$4, character=$5 WHERE id=$1 RETURNING ${profileColumns}`,
+      [userId, xp, coins, level, character],
+    );
+    return toCampusResult(rows[0] as PlayerProfile, next);
+  });
 }
 export async function getInventory(userId: string): Promise<OwnedItem[]> {
   return (await db().query('SELECT item_id AS "itemId", placed, x, y FROM user_items WHERE user_id=$1 ORDER BY item_id', [userId])).rows;

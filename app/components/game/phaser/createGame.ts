@@ -12,7 +12,8 @@ export function createGame(
     parent,
     width: parent.clientWidth || window.innerWidth,
     height: parent.clientHeight || window.innerHeight,
-    backgroundColor: "#5fad45",
+    // Match the page letterbox so asset preload doesn't flash solid grass green.
+    backgroundColor: "#0a120e",
     pixelArt: true,
     roundPixels: true,
     antialias: false,

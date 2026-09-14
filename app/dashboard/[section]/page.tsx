@@ -1,10 +1,10 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   DashboardFriendsPage,
   DashboardQuestsPage,
   DashboardRankingsPage,
 } from "../SocialQuestSections";
+import { WorldExitLink } from "../WorldExitLink";
 import { WorldPanel } from "../WorldPanel";
 import { playerProfile } from "../mockData";
 
@@ -55,10 +55,7 @@ function WorldPage() {
   return (
     <div className="dashboard-world-page">
       <h1 className="sr-only">Open World</h1>
-      <Link className="dashboard-world-exit" href="/dashboard">
-        <span aria-hidden="true">←</span>
-        Exit world
-      </Link>
+      <WorldExitLink />
       <WorldPanel />
     </div>
   );
@@ -73,7 +70,10 @@ function ProfilePage() {
         description="See the progress you have made across campus life."
       />
       <div className="dashboard-profile-grid">
-        <section className="dashboard-panel dashboard-profile-card">
+        <section
+          className="dashboard-panel dashboard-profile-card"
+          data-tutorial-id="profile-card"
+        >
           <div
             className="dashboard-avatar dashboard-avatar-large"
             role="img"

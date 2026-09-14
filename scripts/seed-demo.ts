@@ -1,8 +1,37 @@
+import { readFileSync, existsSync } from 'node:fs';
 import { transaction, db } from '../lib/db';
 import { levelForXp } from '../lib/game-rules';
+import { createVictorWorld } from '../lib/social-data';
+import type { WorldData } from '../types/world';
+
+function loadEnvLocal() {
+  if (!existsSync('.env.local')) return;
+  for (const line of readFileSync('.env.local', 'utf8').split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq <= 0) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
+}
+
+loadEnvLocal();
 
 const university = 'Texas Tech University';
-const demoSubjects = ['demo|maya-rodriguez', 'demo|jordan-lee', 'demo|victor-showcase'];
+const demoSubjects = [
+  'demo|maya-rodriguez',
+  'demo|jordan-lee',
+  'demo|victor-fagbohun',
+  'demo|victor-showcase',
+];
 
 type DemoPlayer = {
   id: string;
@@ -13,6 +42,7 @@ type DemoPlayer = {
   coins: number;
   stats: Record<string, number>;
   items: { itemId: string; x: number; y: number }[];
+  homeWorld?: WorldData;
 };
 
 const demos: DemoPlayer[] = [
@@ -44,13 +74,48 @@ const demos: DemoPlayer[] = [
       { itemId: 'bench', x: 6, y: 8 },
     ],
   },
+  {
+    id: '10000000-0000-0000-0000-000000000201',
+    subject: 'demo|victor-fagbohun',
+    name: 'Victor Fagbohun',
+    major: 'Computer Science',
+    xp: 2140,
+    coins: 1880,
+    stats: { knowledge: 88, wellness: 74, community: 81, career: 79 },
+    items: [
+      { itemId: 'house', x: 5, y: 6 },
+      { itemId: 'library', x: 8, y: 6 },
+      { itemId: 'gym', x: 5, y: 9 },
+      { itemId: 'trophy_building', x: 8, y: 9 },
+      { itemId: 'fountain', x: 6, y: 8 },
+      { itemId: 'bench', x: 7, y: 11 },
+      { itemId: 'tree', x: 4, y: 8 },
+      { itemId: 'lamp_post', x: 9, y: 8 },
+      { itemId: 'garden', x: 3, y: 10 },
+      { itemId: 'pond', x: 10, y: 10 },
+    ],
+    homeWorld: createVictorWorld(),
+  },
 ];
 
 function level(xp: number) {
   return levelForXp(xp);
 }
 
-await transaction(async (client) => {
+function characterPayload(player: DemoPlayer) {
+  const campusProgress = {
+    claimedQuestIds: [],
+    visitedFriendIds: [],
+    homeWorld: player.homeWorld ?? null,
+  };
+  return {
+    sprite: 'student',
+    campusProgress,
+  };
+}
+
+async function main() {
+  await transaction(async (client) => {
   let showcase: { id: string; name: string } | undefined = (
     await client.query(
       `SELECT id, name FROM users
@@ -74,6 +139,7 @@ await transaction(async (client) => {
       )
     ).rows[0];
   } else {
+    // Preserve existing campusProgress / outfit; only backfill basics.
     await client.query(
       `UPDATE users
        SET university=$2,
@@ -81,8 +147,8 @@ await transaction(async (client) => {
            xp=GREATEST(xp,780),
            coins=GREATEST(coins,1500),
            level=GREATEST(level,$3),
-           stats='{"knowledge":72,"wellness":54,"community":63,"career":41}'::jsonb,
-           character=jsonb_build_object('sprite','student-shoes')
+           stats=COALESCE(stats, '{"knowledge":72,"wellness":54,"community":63,"career":41}'::jsonb),
+           character = COALESCE(character, '{}'::jsonb) || jsonb_build_object('sprite', COALESCE(character->>'sprite', 'student-shoes'))
        WHERE id=$1`,
       [showcase.id, university, level(780)],
     );
@@ -95,7 +161,7 @@ await transaction(async (client) => {
   for (const player of demos) {
     await client.query(
       `INSERT INTO users (id, auth_subject, name, university, major, level, xp, coins, stats, character)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,'{"sprite":"student"}'::jsonb)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb)
        ON CONFLICT (auth_subject) DO UPDATE SET
          name=EXCLUDED.name,
          university=EXCLUDED.university,
@@ -103,8 +169,20 @@ await transaction(async (client) => {
          level=EXCLUDED.level,
          xp=EXCLUDED.xp,
          coins=EXCLUDED.coins,
-         stats=EXCLUDED.stats`,
-      [player.id, player.subject, player.name, university, player.major, level(player.xp), player.xp, player.coins, player.stats],
+         stats=EXCLUDED.stats,
+         character=EXCLUDED.character`,
+      [
+        player.id,
+        player.subject,
+        player.name,
+        university,
+        player.major,
+        level(player.xp),
+        player.xp,
+        player.coins,
+        player.stats,
+        JSON.stringify(characterPayload(player)),
+      ],
     );
 
     await client.query(
@@ -132,10 +210,15 @@ await transaction(async (client) => {
        ORDER BY created_at, title
        LIMIT 4`,
     )
-  ).rows as { id: string; xp_reward: number; coin_reward: number; verification_policy: 'QR' | 'PHOTO_AI' | 'MANUAL' }[];
+  ).rows as {
+    id: string;
+    xp_reward: number;
+    coin_reward: number;
+    verification_policy: 'QR' | 'PHOTO_AI' | 'MANUAL';
+  }[];
 
   for (const [index, quest] of questRows.entries()) {
-    for (const userId of [showcase.id, demos[0].id, demos[1].id]) {
+    for (const userId of [showcase.id, ...demos.map((d) => d.id)]) {
       await client.query(
         `INSERT INTO quest_events (user_id, quest_id, xp_gained, coins_gained, verified_by, completed_at)
          VALUES ($1,$2,$3,$4,$5, now() - ($6::int * interval '1 day'))`,
@@ -151,7 +234,15 @@ await transaction(async (client) => {
     [showcase.id],
   );
 
-  console.log(`Seeded showcase data for ${showcase.name}, Maya Rodriguez, and Jordan Lee.`);
-});
+  console.log(
+    `Seeded showcase data for ${showcase.name}, Maya Rodriguez, Jordan Lee, and Victor Fagbohun.`,
+  );
+  });
 
-await db().end();
+  await db().end();
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

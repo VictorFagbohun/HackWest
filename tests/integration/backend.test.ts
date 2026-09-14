@@ -6,6 +6,17 @@ import { Pool } from 'pg';
 import { db } from '../../lib/db';
 import * as players from '../../lib/player-service';
 import * as quests from '../../lib/quest-service';
+import type { CompletionResult } from '../../types/api';
+
+const approve = async () => ({ approved:true as const, reason:'Test evidence' });
+
+async function finishPhoto(userId: string, questId: string, evidence: string, minimumSeconds = 0): Promise<CompletionResult> {
+  const attempt = await quests.startQuest(userId, questId);
+  if (minimumSeconds > 0) {
+    await db().query("UPDATE quest_attempts SET started_at=now()-interval '61 minutes' WHERE id=$1", [attempt.id]);
+  }
+  return quests.submitPhoto(userId, attempt.id, Buffer.from(evidence), 'image/jpeg', approve);
+}
 
 test('backend integration against an isolated disposable schema', { timeout:180000 }, async t => {
   assert.ok(process.env.DATABASE_URL,'DATABASE_URL required');
@@ -17,7 +28,7 @@ test('backend integration against an isolated disposable schema', { timeout:1800
   url.searchParams.set('options',`-c search_path=${schema},public`);
   process.env.DATABASE_URL = url.toString();
   try {
-    for (const file of ['001_core.sql','002_integrity.sql','003_quest_hypertable.sql']) {
+    for (const file of ['001_core.sql','002_integrity.sql','003_quest_hypertable.sql','004_photo_geofence.sql','005_photo_location_only.sql']) {
       const sql = await readFile(`db/migrations/${file}`,'utf8');
       try { await db().query(sql); } catch (error) {
         const position = Number((error as { position?:string }).position);
@@ -25,16 +36,24 @@ test('backend integration against an isolated disposable schema', { timeout:1800
         throw error;
       }
     }
+    // Integration tests run off-campus; production/demo still enforce GPS unless this is set locally.
+    process.env.GEO_CHECK_DISABLED = 'true';
     const a = await players.ensurePlayer(`test|${randomUUID()}`,'Quest Tester');
     const b = await players.ensurePlayer(`test|${randomUUID()}`,'Friend Tester');
+    const library = (await quests.getQuests()).find(q => q.location_code === 'LIBRARY')!;
+    const timedPhoto = (await quests.getQuests()).find(q => q.minimum_duration_seconds > 0)!;
     await t.test('identity mapping and starter house are idempotent', async () => {
       const subject = (await db().query('SELECT auth_subject FROM users WHERE id=$1',[a.id])).rows[0].auth_subject;
       assert.equal((await players.ensurePlayer(subject,'Ignored')).id,a.id);
       assert.deepEqual((await players.getInventory(a.id)).map(i => i.itemId),['house']);
     });
-    await t.test('concurrent QR completion pays exactly once and crosses a level', async () => {
-      const results = await Promise.all(Array.from({ length:6 },() => quests.completeQuestByLocation(a.id,'LIBRARY')));
-      assert.ok(results.every(r => r.newXp === 100));
+    await t.test('concurrent photo completion pays exactly once and crosses a level', async () => {
+      const attempt = await quests.startQuest(a.id, library.id);
+      const outcomes = await Promise.allSettled(Array.from({ length:6 },(_, i) =>
+        quests.submitPhoto(a.id, attempt.id, Buffer.from(`library-${i}`), 'image/jpeg', approve)));
+      assert.equal(outcomes.filter(o => o.status === 'fulfilled').length, 1);
+      const result = await quests.completeQuest(a.id, attempt.id);
+      assert.equal(result.newXp, 100);
       const profile = await players.getPlayerProfile(a.id);
       assert.equal(profile.xp,100); assert.equal(profile.coins,50); assert.equal(profile.level,2); assert.equal(profile.stats.knowledge,1);
       assert.equal((await db().query('SELECT count(*)::integer AS n FROM quest_events WHERE user_id=$1',[a.id])).rows[0].n,1);
@@ -57,23 +76,21 @@ test('backend integration against an isolated disposable schema', { timeout:1800
       assert.deepEqual((await players.getPlayerWorld(a.id)).placedItems,[{ itemId:'house',x:1,y:2 }]);
     });
     await t.test('unverified and another player attempts cannot earn rewards', async () => {
-      const photo = (await quests.getQuests()).find(q => q.verification_policy === 'PHOTO_AI')!;
-      const attempt = await quests.startQuest(a.id,photo.id);
+      const attempt = await quests.startQuest(a.id, timedPhoto.id);
       await assert.rejects(quests.completeQuest(a.id,attempt.id), /verification/);
       await assert.rejects(quests.completeQuest(b.id,attempt.id), /not found/);
-      await assert.rejects(quests.submitPhoto(a.id,attempt.id,Buffer.from('timer'),'image/jpeg',async () => ({ approved:true,reason:'Test verifier' })), /timer/);
+      await assert.rejects(quests.submitPhoto(a.id,attempt.id,Buffer.from('timer'),'image/jpeg',approve), /timer/);
       // Backdate only this disposable test attempt; production duration checks remain enabled.
       await db().query("UPDATE quest_attempts SET started_at=now()-interval '61 minutes' WHERE id=$1",[attempt.id]);
       await assert.rejects(quests.submitPhoto(a.id,attempt.id,Buffer.from('outage'),'image/jpeg',async () => { throw new Error('Simulated provider outage'); }), /unavailable/);
       assert.equal((await db().query('SELECT status FROM quest_attempts WHERE id=$1',[attempt.id])).rows[0].status,'STARTED');
       const before = (await players.getPlayerProfile(a.id)).xp;
-      const result = await quests.submitPhoto(a.id,attempt.id,Buffer.from('accepted'),'image/jpeg',async () => ({ approved:true,reason:'Test evidence' }));
+      const result = await quests.submitPhoto(a.id,attempt.id,Buffer.from('accepted'),'image/jpeg',approve);
       assert.equal(result.newXp,before+100);
       assert.deepEqual(await quests.completeQuest(a.id,attempt.id),result);
     });
     await t.test('rejected photos award nothing', async () => {
-      const photo = (await quests.getQuests()).find(q => q.verification_policy === 'PHOTO_AI')!;
-      const attempt = await quests.startQuest(b.id,photo.id);
+      const attempt = await quests.startQuest(b.id, timedPhoto.id);
       await db().query("UPDATE quest_attempts SET started_at=now()-interval '61 minutes' WHERE id=$1",[attempt.id]);
       await assert.rejects(quests.submitPhoto(b.id,attempt.id,Buffer.from('rejected'),'image/jpeg',async () => ({ approved:false,reason:'Wrong location' })), /Wrong location/);
       assert.equal((await players.getPlayerProfile(b.id)).xp,0);
@@ -109,27 +126,29 @@ test('backend integration against an isolated disposable schema', { timeout:1800
     await t.test('daily reset, one-time claims, repeatable attempt retries and reused photos', async () => {
       const c = await players.ensurePlayer(`test|${randomUUID()}`,'Frequency Tester');
       await db().query("UPDATE users SET university='Test Campus' WHERE id=$1",[c.id]);
-      await quests.completeQuestByLocation(c.id,'LIBRARY');
+      await finishPhoto(c.id, library.id, 'library-day-1');
       await db().query("UPDATE quest_claims SET period_key='2000-01-01' WHERE user_id=$1",[c.id]);
-      await quests.completeQuestByLocation(c.id,'LIBRARY');
+      await finishPhoto(c.id, library.id, 'library-day-2');
       assert.equal((await players.getPlayerProfile(c.id)).xp,200);
-      await quests.completeQuestByLocation(c.id,'HACKATHON');
-      await quests.completeQuestByLocation(c.id,'HACKATHON');
+      const hackathon = (await quests.getQuests()).find(q => q.location_code === 'HACKATHON')!;
+      await finishPhoto(c.id, hackathon.id, 'hackathon-1');
+      await assert.rejects(finishPhoto(c.id, hackathon.id, 'hackathon-2'), /already/);
       assert.equal((await players.getPlayerProfile(c.id)).xp,400);
-      await db().query("UPDATE quests SET frequency='REPEATABLE' WHERE location_code='REC_CENTER'");
-      await assert.rejects(quests.completeQuestByLocation(c.id,'REC_CENTER'),/attempt ID/);
-      const qr = (await quests.getQuests()).find(q => q.location_code === 'REC_CENTER')!;
-      const first = await quests.startQuest(c.id,qr.id);
-      await Promise.all([quests.completeQuestByLocation(c.id,'REC_CENTER',first.id),quests.completeQuestByLocation(c.id,'REC_CENTER',first.id)]);
+      const strength = (await quests.getQuests()).find(q => q.title === 'Strength Training')!;
+      await db().query("UPDATE quests SET frequency='REPEATABLE' WHERE id=$1", [strength.id]);
+      const first = await quests.startQuest(c.id, strength.id);
+      await Promise.all([
+        quests.submitPhoto(c.id, first.id, Buffer.from('rec-1'), 'image/jpeg', approve),
+        quests.submitPhoto(c.id, first.id, Buffer.from('rec-1b'), 'image/jpeg', approve),
+      ]);
       assert.equal((await players.getPlayerProfile(c.id)).xp,475);
-      const second = await quests.startQuest(c.id,qr.id);
-      assert.notEqual(first.id,second.id);
-      await quests.completeQuestByLocation(c.id,'REC_CENTER',second.id);
+      const second = await quests.startQuest(c.id, strength.id);
+      assert.notEqual(first.id, second.id);
+      await quests.submitPhoto(c.id, second.id, Buffer.from('rec-2'), 'image/jpeg', approve);
       assert.equal((await players.getPlayerProfile(c.id)).xp,550);
-      const photo = (await quests.getQuests()).find(q => q.verification_policy === 'PHOTO_AI')!;
-      const photoAttempt = await quests.startQuest(b.id,photo.id);
+      const photoAttempt = await quests.startQuest(b.id, timedPhoto.id);
       await db().query("UPDATE quest_attempts SET started_at=now()-interval '61 minutes' WHERE id=$1",[photoAttempt.id]);
-      await assert.rejects(quests.submitPhoto(b.id,photoAttempt.id,Buffer.from('rejected'),'image/jpeg',async () => ({ approved:true,reason:'Should not run' })),/already submitted/);
+      await assert.rejects(quests.submitPhoto(b.id,photoAttempt.id,Buffer.from('rejected'),'image/jpeg',approve),/already submitted/);
     });
   } finally {
     await db().end();

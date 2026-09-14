@@ -81,6 +81,7 @@ export function WorldHud({
               <button
                 type="button"
                 className={`hud-btn hud-btn-primary ${buildMode ? "is-active" : ""}`}
+                data-tutorial-id="build-toggle"
                 onClick={onToggleBuild}
               >
                 {buildMode ? "Explore" : "Build"}
@@ -92,7 +93,7 @@ export function WorldHud({
         </div>
 
         {editable && buildMode ? (
-          <div className="hud-catalog">
+          <div className="hud-catalog" data-tutorial-id="build-catalog">
             <CatalogRow
               label="Buildings"
               items={buildings}

@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { FriendsPanel } from "@/app/components/friends/FriendsPanel";
 import { LeaderboardPanel } from "@/app/components/leaderboard/LeaderboardPanel";
-import { QuestPanel } from "@/app/components/quests/QuestPanel";
 import type { FriendProfile } from "@/types/social";
+import { CampusQuestsPanel } from "./CampusQuestsPanel";
 import { useSocialQuest } from "./SocialQuestProvider";
+import { useTutorialVisitLock } from "@/app/components/tutorial/TutorialProvider";
+import { VICTOR_FRIEND_ID } from "@/lib/tutorial";
 
 function SectionHeading({
   eyebrow,
@@ -28,17 +30,15 @@ function SectionHeading({
 }
 
 export function DashboardQuestsPage() {
-  const { quests, claimQuest } = useSocialQuest();
-
   return (
     <div className="dashboard-page">
       <SectionHeading
         eyebrow="Quest log"
         title="Your quests"
-        description="Build your campus and connect with friends to earn rewards."
+        description="Visit the campus pin, then submit a photo. GPS and Gemini both have to match before rewards save."
       />
-      <div className="dashboard-panel quest-panel-surface p-4">
-        <QuestPanel quests={quests} onClaim={claimQuest} />
+      <div className="dashboard-panel p-4">
+        <CampusQuestsPanel />
       </div>
     </div>
   );
@@ -53,8 +53,10 @@ export function DashboardFriendsPage() {
     visitFriend,
     visitedFriendIds,
   } = useSocialQuest();
+  const lockVisitsToVictor = useTutorialVisitLock();
 
   const handleVisit = (friend: FriendProfile) => {
+    if (lockVisitsToVictor && friend.id !== VICTOR_FRIEND_ID) return;
     visitFriend(friend);
     router.push("/dashboard/world");
   };
@@ -89,7 +91,7 @@ export function DashboardRankingsPage() {
         title="Campus rankings"
         description="Compare XP earned through quests this week."
       />
-      <div className="dashboard-panel p-4">
+      <div className="dashboard-panel p-4" data-tutorial-id="rankings-panel">
         <LeaderboardPanel players={leaderboard} />
       </div>
     </div>

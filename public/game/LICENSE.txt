@@ -6,4 +6,6 @@ Kenney Tiny Dungeon — CC0 1.0 Universal — https://kenney.nl/assets/tiny-dung
 Campus extras (water, paths, benches, lamps, flower beds, fountain)
 are original 16x16 tiles created for Campus Quest.
 
+Footstep SFX (audio/footstep.wav) is an original short clip created for Campus Quest.
+
 Attribution is not required for Kenney CC0 packs; we credit Kenney.nl anyway.
